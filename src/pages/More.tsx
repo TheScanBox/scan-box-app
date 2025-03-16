@@ -110,7 +110,7 @@ const More = () => {
                         scans?.pages.flatMap((arr) => arr) || [],
                         3
                     ).map((group) => (
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-3 gap-2 mb-3">
                             {group.map((scan) => (
                                 <Card
                                     key={scan?.id}
