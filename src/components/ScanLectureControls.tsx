@@ -1,5 +1,3 @@
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import WebApp from "@twa-dev/sdk";
 import { IoIosArrowForward } from "react-icons/io";
 import useSafeArea from "../hooks/useSafeArea";
 import { isFullscreen } from "@telegram-apps/sdk-react";
