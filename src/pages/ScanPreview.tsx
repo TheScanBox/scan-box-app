@@ -78,6 +78,7 @@ function ScanPreview() {
     const { data, error, isLoading } = useQuery<ScanResponse>({
         queryKey: [`scan_${param.id}`],
         queryFn: fetchData,
+        staleTime: 600000,
     });
 
     const {
@@ -88,6 +89,7 @@ function ScanPreview() {
     } = useQuery<{ [index: string]: number } | Error>({
         queryKey: [`chap_${param.id}`],
         queryFn: fetchChap,
+        staleTime: 600000,
     });
 
     useEffect(() => {
@@ -214,11 +216,15 @@ function ScanPreview() {
 
             const bookmarksArr: Array<typeof item> = JSON.parse(result[key]);
 
-            const filterBookmarks = bookmarksArr.filter(
-                (result) => result.scanId != data?.id
+            const isInList = bookmarksArr.find(
+                (el) => el.scanId == data?.scanId
             );
 
-            if (bookmark) {
+            const filterBookmarks = bookmarksArr.filter(
+                (result) => result.scanId != data?.scanId
+            );
+
+            if (isInList) {
                 await cloudStorage.setItem(
                     key,
                     JSON.stringify([...filterBookmarks])

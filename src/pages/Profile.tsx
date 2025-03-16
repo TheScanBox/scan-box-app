@@ -58,6 +58,7 @@ function Profile() {
     } = useQuery<UserInfo, Error>({
         queryKey: ["profile"],
         queryFn: fetchUserInfo,
+        staleTime: 600000,
     });
 
     const handleRead = (data: Recent) => {
@@ -80,13 +81,12 @@ function Profile() {
                 "recents"
             )) as unknown as { [index: string]: string };
 
-            if (!favResults || favResults["favourites"] == "") return;
-            if (!bookmarkResults || bookmarkResults["bookmarks"] == "") return;
-            if (!recentResults || recentResults["recents"] == "") return;
-
-            setFavourites(JSON.parse(favResults["favourites"]));
-            setBoomarks(JSON.parse(bookmarkResults["bookmarks"]));
-            setRecent(JSON.parse(recentResults["recents"]));
+            if (favResults && favResults["favourites"] != "")
+                setFavourites(JSON.parse(favResults["favourites"]));
+            if (bookmarkResults && bookmarkResults["bookmarks"] != "")
+                setBoomarks(JSON.parse(bookmarkResults["bookmarks"]));
+            if (recentResults && recentResults["recents"] != "")
+                setRecent(JSON.parse(recentResults["recents"]));
         };
 
         fetchData();
@@ -122,17 +122,20 @@ function Profile() {
     return (
         <Page>
             <div
-                className="p-4 text-white h-screen pb-10 lg:max-w-[700px] mx-auto"
+                className="p-4 text-white h-screen pb-10 lg:max-w-[700px] mx-auto relative"
                 style={{
                     marginTop: top,
                 }}
             >
                 <div className="flex gap-4 items-center mt-2">
-                    <img
-                        src={user?.photo_url}
-                        className="w-24 h-24 object-cover rounded-full"
-                        alt="1"
-                    />
+                    <div className="w-24 h-24 rounded-full relative">
+                        <img
+                            src={user?.photo_url}
+                            className="w-full h-full object-cover rounded-full"
+                            alt={user?.first_name || ""}
+                        />
+                        <div className="absolute top-0 left-0 right-0 bottom-0 rounded-full" />
+                    </div>
 
                     <div>
                         <h1 className="text-2xl font-bold">
@@ -181,22 +184,23 @@ function Profile() {
                     </div>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-6">
+                <div
+                    className="mt-5 flex flex-col gap-6"
+                    style={{
+                        paddingBottom: bottom,
+                    }}
+                >
                     <div className="w-full">
                         <h2 className="text-2xl font-bold mb-4">
                             🕒 Historique{" "}
                         </h2>
                         <div className=" flex gap-2 w-full overflow-x-auto no-scrollbar">
                             {recent.length == 0 ? (
-                                <p className="text-xs w-full text-center">
+                                <p className="text-xs w-full text-center text-slate-500">
                                     Nothing yet
                                 </p>
                             ) : (
                                 recent.map((item, index) => (
-                                    // <Link
-                                    //     to={`../details/${item.id}`}
-                                    //     key={index}
-                                    // >
                                     <div
                                         onClick={() => handleRead(item)}
                                         key={index}
@@ -222,10 +226,8 @@ function Profile() {
                                             </p>
                                         </div>
                                     </div>
-                                    // </Link>
                                 ))
                             )}
-                            {/* {JSON.stringify(recent)} */}
                         </div>
                     </div>
 
@@ -235,7 +237,7 @@ function Profile() {
                         </h2>
                         <div className="w-full flex gap-2 overflow-x-auto no-scrollbar">
                             {favourites.length == 0 ? (
-                                <p className="text-xs w-full text-center">
+                                <p className="text-xs w-full text-center text-slate-500">
                                     A list of favourite scan
                                 </p>
                             ) : (
@@ -253,13 +255,13 @@ function Profile() {
                         </div>
                     </div>
 
-                    <div className="w-full mb-5">
+                    <div className="w-full">
                         <h2 className="text-2xl font-bold mb-4 flex items-center">
                             📺 Watchlist
                         </h2>
                         <div className="flex w-full gap-2 overflow-x-auto no-scrollbar">
                             {bookmarks.length == 0 ? (
-                                <p className="text-xs w-full text-center">
+                                <p className="text-xs w-full text-center text-slate-500">
                                     Add scan to read later
                                 </p>
                             ) : (
@@ -276,25 +278,21 @@ function Profile() {
                             )}
                         </div>
                     </div>
+
+                    <div className="flex justify-center w-full items-center">
+                        <p className="text-slate-500 text-xs">
+                            Made With <span className="text-red-600">❤</span> By{" "}
+                            <span
+                                className="underline font-bold"
+                                onClick={() =>
+                                    openTelegramLink("https://t.me/TheScanBox")
+                                }
+                            >
+                                TheScanBox
+                            </span>
+                        </p>
+                    </div>
                 </div>
-            </div>
-            <div
-                className="flex justify-center w-full items-center fixed"
-                style={{
-                    bottom: bottom,
-                }}
-            >
-                <p className="text-slate-500 text-xs">
-                    Made With <span className="text-red-600">❤</span> By{" "}
-                    <span
-                        className="underline font-bold"
-                        onClick={() =>
-                            openTelegramLink("https://t.me/TheScanBox")
-                        }
-                    >
-                        TheScanBox
-                    </span>
-                </p>
             </div>
         </Page>
     );

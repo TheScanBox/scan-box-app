@@ -127,7 +127,17 @@ function Home() {
                                     </div>
                                 </div>
                             ) : (
-                                <Banner data={data?.slice(0, 5) || []} />
+                                <Banner
+                                    data={
+                                        data
+                                            ?.sort(
+                                                () =>
+                                                    Math.random() -
+                                                    Math.random()
+                                            )
+                                            .slice(0, 5) || []
+                                    }
+                                />
                             )}
 
                             <CardsContainer

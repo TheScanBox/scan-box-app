@@ -53,7 +53,7 @@ function Banner({ data }: { data: ScanResponse[] }) {
                     <h2 className="text-xl text-white capitalize">
                         {data[index].title}
                     </h2>
-                    <p className="text-sm text-slate-200">{data[index].type}</p>
+                    <p className="text-xs text-slate-200">{data[index].type}</p>
                 </div>
                 <div className="flex justify-center items-center w-20">
                     <Link
