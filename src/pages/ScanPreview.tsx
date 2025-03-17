@@ -558,9 +558,9 @@ function ScanPreview() {
                         <button
                             onClick={() => handleRead(savedChap ?? 1)}
                             className="flex items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
-                            // style={{
-                            //     bottom: `calc(${bottom}px + 3.5rem)`,
-                            // }}
+                            style={{
+                                bottom: `calc(${bottom}px + 3.5rem)`,
+                            }}
                         >
                             <IoMdArrowDropright size={20} />
                             {savedChap ? "Continue" : "Start"}
@@ -568,9 +568,9 @@ function ScanPreview() {
 
                         <div
                             className="flex items-center pb-4 gap-3 justify-center w-full"
-                            // style={{
-                            //     paddingBottom: isFullscreen() ? bottom : "1rem",
-                            // }}
+                            style={{
+                                paddingBottom: isFullscreen() ? bottom : "1rem",
+                            }}
                         >
                             <div
                                 onClick={() => {
