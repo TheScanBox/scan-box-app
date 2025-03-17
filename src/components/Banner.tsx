@@ -32,7 +32,10 @@ function Banner({ data }: { data: ScanResponse[] }) {
         >
             <div className="flex gap-1 absolute top-2 right-1 p-2">
                 {data.map((_, idx) => (
-                    <div className={`point ${index === idx && "active"}`} />
+                    <div
+                        key={idx}
+                        className={`point ${index === idx && "active"}`}
+                    />
                 ))}
             </div>
 
@@ -50,7 +53,7 @@ function Banner({ data }: { data: ScanResponse[] }) {
 
             <div className="absolute bottom-0 p-2 text-white w-full flex justify-between items-center bg-black/50 rounded-b-lg">
                 <div>
-                    <h2 className="text-xl text-white capitalize">
+                    <h2 className="text-xl text-white capitalize truncate">
                         {data[index].title}
                     </h2>
                     <p className="text-xs text-slate-200">{data[index].type}</p>

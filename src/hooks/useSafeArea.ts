@@ -1,5 +1,4 @@
 import {
-    isFullscreen,
     viewportContentSafeAreaInsets,
     viewportSafeAreaInsets,
 } from "@telegram-apps/sdk-react";

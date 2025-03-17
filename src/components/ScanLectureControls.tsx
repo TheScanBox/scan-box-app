@@ -1,6 +1,11 @@
-import { IoIosArrowForward } from "react-icons/io";
+import { IoIosArrowForward, IoMdPhonePortrait } from "react-icons/io";
 import useSafeArea from "../hooks/useSafeArea";
-import { isFullscreen } from "@telegram-apps/sdk-react";
+import {
+    exitFullscreen,
+    isFullscreen,
+    mountViewport,
+    requestFullscreen,
+} from "@telegram-apps/sdk-react";
 
 type ScanLectureControlsProps = {
     numChap: number;
@@ -18,11 +23,28 @@ function ScanLectureControls({
 }: ScanLectureControlsProps) {
     const { top } = useSafeArea();
 
+    // const fullScreen = async () => {
+    //     if (!isFullscreen()) {
+    //         await mountViewport();
+    //         if (requestFullscreen.isAvailable() && !isFullscreen()) {
+    //             try {
+    //                 await requestFullscreen();
+    //             } catch (error) {
+    //                 alert(JSON.stringify(error));
+    //             }
+    //         }
+
+    //         return;
+    //     }
+
+    //     await exitFullscreen();
+    // };
+
     return (
         <div
             className={`${
                 showControls ? "show-controls" : "hidden"
-            } w-full text-white font-light fixed z-10 bg-black/90 p-2`}
+            } w-full text-white font-light fixed bg-black/90 p-2 z-30`}
             style={{
                 paddingTop: isFullscreen() ? top : "1rem",
             }}

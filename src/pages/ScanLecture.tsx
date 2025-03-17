@@ -4,7 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { ScanResponse } from "../App";
 import ScanLectureControlsBottom from "../components/ScanLectureControlsBottom";
-import { cloudStorage } from "@telegram-apps/sdk-react";
+import {
+    cloudStorage,
+    isFullscreen,
+    isViewportMounted,
+    isViewportMounting,
+    mountViewport,
+    requestFullscreen,
+} from "@telegram-apps/sdk-react";
 
 import { Page } from "../components/Page";
 import Loading from "../components/Loading";
@@ -25,6 +32,7 @@ function ScanLecture() {
     const [scrollProgress, setScrollProgress] = useState(0);
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
+    // const hasMounted = useRef(false);
 
     const {
         state,
@@ -38,6 +46,27 @@ function ScanLecture() {
     const [selectedChap, setSelectedChap] = useState(
         param.chapter || state?.data?.chap || "1"
     );
+
+    // useEffect(() => {
+    //     const fullScreen = async () => {
+    //         if (mountViewport.isAvailable() && !isViewportMounting()) {
+    //             if (!hasMounted.current) {
+    //                 hasMounted.current = true;
+    //                 await mountViewport();
+
+    //                 if (requestFullscreen.isAvailable() && !isFullscreen()) {
+    //                     try {
+    //                         await requestFullscreen();
+    //                     } catch (error) {
+    //                         alert(JSON.stringify(error));
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //     };
+
+    //     fullScreen();
+    // }, []);
 
     const fetchChap = async () => {
         const { data, status } = await api.get(`/?key=${param.id}`);
@@ -199,7 +228,7 @@ function ScanLecture() {
                         </div>
                     ) : (
                         pageUrls.map((url, index) => (
-                            <div className="relative">
+                            <div className="relative" key={index}>
                                 <LazyLoadImage
                                     className="z-0 object-contain"
                                     key={index}

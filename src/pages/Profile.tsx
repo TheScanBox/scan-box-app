@@ -5,6 +5,7 @@ import {
     retrieveLaunchParams,
     openTelegramLink,
     copyTextToClipboard,
+    isFullscreen,
 } from "@telegram-apps/sdk-react";
 import { Card } from "../components";
 import { Page } from "../components/Page";
@@ -279,7 +280,11 @@ function Profile() {
                         </div>
                     </div>
 
-                    <div className="flex justify-center w-full items-center">
+                    <div
+                        className={`flex justify-center w-full items-center ${
+                            !isFullscreen() && "py-3"
+                        }`}
+                    >
                         <p className="text-slate-500 text-xs">
                             Made With <span className="text-red-600">❤</span> By{" "}
                             <span

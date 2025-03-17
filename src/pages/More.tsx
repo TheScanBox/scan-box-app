@@ -9,6 +9,8 @@ import Loading from "../components/Loading";
 import { useInView } from "react-intersection-observer";
 import useSafeArea from "../hooks/useSafeArea";
 
+const PAGE_SIZE = 10;
+
 const splitArray = (arr: ScanResponse[], size: number) => {
     const results = [];
 
@@ -45,6 +47,7 @@ const More = () => {
         data: scans,
         isLoading,
         error,
+        isFetching,
         fetchNextPage,
         hasNextPage,
         refetch,
@@ -52,8 +55,9 @@ const More = () => {
         queryKey: [`more_${params.id}`],
         queryFn: fetchMore,
         getNextPageParam: (lastPage, pages) =>
-            lastPage.length == 2 ? pages?.length + 1 : undefined,
+            lastPage.length == PAGE_SIZE ? pages?.length + 1 : undefined,
         initialPageParam: 1,
+        staleTime: 1000000,
     });
 
     useEffect(() => {
@@ -109,8 +113,8 @@ const More = () => {
                     {splitArray(
                         scans?.pages.flatMap((arr) => arr) || [],
                         3
-                    ).map((group) => (
-                        <div className="grid grid-cols-3 gap-2 mb-3">
+                    ).map((group, idx) => (
+                        <div key={idx} className="grid grid-cols-3 gap-2 mb-3 ">
                             {group.map((scan) => (
                                 <Card
                                     key={scan?.id}
@@ -124,19 +128,6 @@ const More = () => {
                             ))}
                         </div>
                     ))}
-                    {/* {scans?.pages.map((group) =>
-                        group.map((scan) => (
-                            <Card
-                                key={scan?.id}
-                                id={scan.scanId}
-                                imgUrl={scan.imgUrl}
-                                stars={scan.stars}
-                                title={scan.title}
-                                helpPath="../"
-                                isMore={true}
-                            />
-                        ))
-                    )} */}
                 </div>
 
                 <div
@@ -146,7 +137,7 @@ const More = () => {
                         paddingBottom: bottom,
                     }}
                 >
-                    {isLoading ? (
+                    {isLoading || isFetching ? (
                         <div className="flex flex-col justify-center items-center w-full mt-3">
                             <Loading />
                             <p className="text-xs text-slate-400 mt-2">

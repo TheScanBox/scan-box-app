@@ -15,7 +15,6 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import { debounce } from "lodash";
 import useSafeArea from "../hooks/useSafeArea";
-import CardLoading from "../components/Loading/CardLoading";
 
 function Home() {
     const [search, setSearch] = useState("");

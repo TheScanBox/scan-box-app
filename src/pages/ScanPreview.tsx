@@ -13,6 +13,8 @@ import {
     openTelegramLink,
     cloudStorage,
     isFullscreen,
+    exitFullscreen,
+    mountViewport,
 } from "@telegram-apps/sdk-react";
 import { IoShareSocial } from "react-icons/io5";
 import { Tag, ChapterItem } from "../components";
@@ -26,6 +28,13 @@ export type FavBookType = {
     img: string;
     name: string;
     scanId: string;
+};
+
+const capitalize = (text: string) => {
+    return text
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
 };
 
 function ScanPreview() {
@@ -46,14 +55,6 @@ function ScanPreview() {
     >([]);
 
     const { top, bottom } = useSafeArea();
-
-    const isSpecial = (chapNum: number) => {
-        const findChap = data?.specialChapters.find(
-            (chap) => chap.chap == chapNum - 0.5
-        );
-
-        return findChap ? chapNum - 0.5 : chapNum;
-    };
 
     const fetchData = async () => {
         const { data, status } = await api.get(`/scan?scanID=${param.id}`);
@@ -91,6 +92,14 @@ function ScanPreview() {
         queryFn: fetchChap,
         staleTime: 600000,
     });
+
+    // useEffect(() => {
+    //     const exitFull = async () => {
+    //         if (isFullscreen()) await exitFullscreen();
+    //     };
+
+    //     exitFull();
+    // }, []);
 
     useEffect(() => {
         if (chapData) {
@@ -251,9 +260,9 @@ function ScanPreview() {
 
         openTelegramLink(
             `https://t.me/share/url?text=${encodeURIComponent(
-                `Lisez les derniere chapitre de ${
-                    data?.title
-                } gratuitement !\n\n${`${APP_URL}?startapp=read_${param.id}`}`
+                `Lisez les derniere chapitre de **${capitalize(
+                    data?.title || ""
+                )}** gratuitement !\n\n${`${APP_URL}?startapp=read_${param.id}`}`
             )}`
         );
     };
@@ -350,7 +359,7 @@ function ScanPreview() {
             >
                 <div className="w-full min-h-56 flex gap-2">
                     <div
-                        className="h-full w-3/4 max-w-[150px] bg-cover bg-center"
+                        className="h-full w-3/4 min-w-32 max-w-[150px] bg-cover bg-center"
                         style={{
                             backgroundImage: `url(${data?.imgUrl})`,
                         }}
@@ -364,13 +373,13 @@ function ScanPreview() {
                     /> */}
                     </div>
 
-                    <div className="pt-2 space-y-3 w-full">
+                    <div className="space-y-3 w-full overflow-hidden">
                         <div className="w-full">
-                            <h2 className="text-lg text-white font-bold w-5/6 truncate capitalize">
+                            <h2 className="text-lg text-white font-bold break-words capitalize">
                                 {data?.title}
                             </h2>
                             <p className="text-xs text-slate-400 truncate">
-                                By {data?.author?.name ?? "Kazuya Morida"}
+                                Par {data?.author?.name ?? "Kazuya Morida"}
                             </p>
                         </div>
 
@@ -431,7 +440,7 @@ function ScanPreview() {
                                 className="underline cursor-pointer text-red-400"
                                 onClick={() => setReadMore((prev) => !prev)}
                             >
-                                {readMore ? "Redius..." : "Voir plus"}
+                                {readMore ? "Redius" : "Voir plus"}
                             </span>
                         </p>
                     </div>
@@ -548,10 +557,10 @@ function ScanPreview() {
 
                         <button
                             onClick={() => handleRead(savedChap ?? 1)}
-                            className="flex items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white"
-                            style={{
-                                bottom: `calc(${bottom}px + 3.5rem)`,
-                            }}
+                            className="flex items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
+                            // style={{
+                            //     bottom: `calc(${bottom}px + 3.5rem)`,
+                            // }}
                         >
                             <IoMdArrowDropright size={20} />
                             {savedChap ? "Continue" : "Start"}
@@ -559,9 +568,9 @@ function ScanPreview() {
 
                         <div
                             className="flex items-center pb-4 gap-3 justify-center w-full"
-                            style={{
-                                paddingBottom: isFullscreen() ? bottom : "1rem",
-                            }}
+                            // style={{
+                            //     paddingBottom: isFullscreen() ? bottom : "1rem",
+                            // }}
                         >
                             <div
                                 onClick={() => {
