@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 import Loading from "../components/Loading";
 import useSafeArea from "../hooks/useSafeArea";
 import { IoMdClock } from "react-icons/io";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 type Recent = Partial<ScanResponse> & { chap: string };
 
@@ -205,14 +206,26 @@ function Profile() {
                                     <div
                                         onClick={() => handleRead(item)}
                                         key={index}
-                                        className="flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer"
+                                        className="flex w-[8.5rem] min-w-[8.5rem] flex-col gap-2 text-white cursor-pointer"
                                     >
-                                        <div
-                                            className="w-32 h-36 bg-cover bg-center"
+                                        <div className="w-full h-44 relative">
+                                            <LazyLoadImage
+                                                src={item.imgUrl}
+                                                className="w-full h-full object-cover"
+                                                alt="img"
+                                                // placeholder={<img src="./loader.gif" />}
+                                                placeholder={
+                                                    <div className="w-full h-full bg-slate-400 animate-pulse" />
+                                                }
+                                            />
+                                            <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
+                                        </div>
+                                        {/* <div
+                                            className="w-32 h-40 bg-cover bg-center"
                                             style={{
                                                 backgroundImage: `url(${item.imgUrl})`,
                                             }}
-                                        />
+                                        /> */}
                                         {/* <img
                                             src={item.imgUrl}
                                             alt={item.title}

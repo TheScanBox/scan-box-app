@@ -1,4 +1,5 @@
 import { CiStar } from "react-icons/ci";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 import { Link, useNavigate } from "react-router-dom";
 
 type CardProps = {
@@ -23,19 +24,30 @@ function Card({
     return (
         <div
             className={`active:opacity-5 cursor-pointer ${
-                isMore ? "w-full flex-1 max-w-30" : "min-w-32 w-32"
+                isMore ? "w-full flex-1 " : "min-w-[8.5rem] w-[8.5rem]"
             }`}
             onClick={() =>
                 navigate(`${helpPath ? helpPath : ""}../details/${id}`)
             }
         >
-            <div
+            {/* <div
                 className="w-full h-36 bg-cover bg-center"
                 style={{
                     backgroundImage: `url(${imgUrl})`,
                 }}
-            />
-            {/* <img src={imgUrl} className="w-full h-36 object-cover" alt="img" /> */}
+            /> */}
+            <div className="w-full h-44 relative">
+                <LazyLoadImage
+                    src={imgUrl}
+                    className="w-full h-full object-cover"
+                    alt="img"
+                    // placeholder={<img src="./loader.gif" />}
+                    placeholder={
+                        <div className="w-full h-full bg-slate-400 animate-pulse" />
+                    }
+                />
+                <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
+            </div>
             <div className="flex flex-col text-white text-xs mt-1 gap-1">
                 <p className="truncate capitalize">{title}</p>
                 <div className="flex justify-between">

@@ -51,14 +51,14 @@ function Banner({ data }: { data: ScanResponse[] }) {
                 className="h-full w-full object-cover rounded-lg"
             /> */}
 
-            <div className="absolute bottom-0 p-2 text-white w-full flex justify-between items-center bg-black/50 rounded-b-lg">
-                <div>
-                    <h2 className="text-xl text-white capitalize truncate">
+            <div className="absolute bottom-0 p-2 text-white w-full flex gap-2 justify-between items-center bg-black/50 rounded-b-lg">
+                <div className="w-3/4">
+                    <h2 className="text-xl text-white capitalize truncate ">
                         {data[index].title}
                     </h2>
                     <p className="text-xs text-slate-200">{data[index].type}</p>
                 </div>
-                <div className="flex justify-center items-center w-20">
+                <div className="flex flex-1 justify-center items-center w-1/4">
                     <Link
                         className="p-2 rounded-full bg-blue-500 w-full text-center"
                         to={`/details/${data[index].scanId}`}

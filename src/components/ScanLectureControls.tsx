@@ -1,11 +1,6 @@
 import { IoIosArrowForward, IoMdPhonePortrait } from "react-icons/io";
 import useSafeArea from "../hooks/useSafeArea";
-import {
-    exitFullscreen,
-    isFullscreen,
-    mountViewport,
-    requestFullscreen,
-} from "@telegram-apps/sdk-react";
+import { isFullscreen } from "@telegram-apps/sdk-react";
 
 type ScanLectureControlsProps = {
     numChap: number;

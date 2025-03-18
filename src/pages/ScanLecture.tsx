@@ -4,14 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { ScanResponse } from "../App";
 import ScanLectureControlsBottom from "../components/ScanLectureControlsBottom";
-import {
-    cloudStorage,
-    isFullscreen,
-    isViewportMounted,
-    isViewportMounting,
-    mountViewport,
-    requestFullscreen,
-} from "@telegram-apps/sdk-react";
+import { cloudStorage } from "@telegram-apps/sdk-react";
 
 import { Page } from "../components/Page";
 import Loading from "../components/Loading";

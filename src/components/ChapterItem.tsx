@@ -23,7 +23,7 @@ function ChapterItem({ img, chapterNum }: ChapterItemProps) {
                     alt={`${name}-${chapterNum}`}
                     className="h-full w-11 object-cover rounded-md"
                 /> */}
-                <p className="text-white">Chapiter {chapterNum}</p>
+                <p className="text-white">Chapitre {chapterNum}</p>
             </div>
             <div>
                 <IoIosArrowForward

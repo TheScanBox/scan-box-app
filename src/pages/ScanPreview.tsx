@@ -262,7 +262,10 @@ function ScanPreview() {
             `https://t.me/share/url?text=${encodeURIComponent(
                 `Lisez les derniere chapitre de **${capitalize(
                     data?.title || ""
-                )}** gratuitement !\n\n${`${APP_URL}?startapp=read_${param.id}`}`
+                )}** gratuitement !\n\n${
+                    data?.continuation &&
+                    `**Chapitre apres l'anime : **${data.continuation}\n\n`
+                }${`${APP_URL}?startapp=read_${param.id}`}`
             )}`
         );
     };
@@ -481,7 +484,7 @@ function ScanPreview() {
                     <>
                         <div className="text-slate-300 flex justify-between items-center">
                             <h1 className="text-sm">
-                                Chapiters -{" "}
+                                Chapitres -{" "}
                                 {numChap - (data?.specialChapters?.length || 0)}
                             </h1>
                             <div

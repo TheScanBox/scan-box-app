@@ -1,14 +1,18 @@
 import { Link } from "react-router-dom";
 import { ScanResponse } from "../App";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 function SearchResult({ id, imgUrl, title, author }: Partial<ScanResponse>) {
     return (
         <Link to={`/details/${id}`}>
             <div className="flex gap-2 text-white">
-                <img
+                <LazyLoadImage
                     src={imgUrl}
                     alt={title}
-                    className="w-2/6 h-40 object-cover"
+                    className="w-32 h-44 object-cover"
+                    placeholder={
+                        <div className="w-full h-full bg-slate-400 animate-pulse" />
+                    }
                 />
                 <div>
                     <p className="capitalize text-lg">{title}</p>
