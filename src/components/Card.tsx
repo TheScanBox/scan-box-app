@@ -24,7 +24,7 @@ function Card({
     return (
         <div
             className={`active:opacity-5 cursor-pointer ${
-                isMore ? "w-full flex-1 " : "min-w-[8.5rem] w-[8.5rem]"
+                isMore ? "w-full flex-1 " : "min-w-32 w-32"
             }`}
             onClick={() =>
                 navigate(`${helpPath ? helpPath : ""}../details/${id}`)
@@ -36,10 +36,10 @@ function Card({
                     backgroundImage: `url(${imgUrl})`,
                 }}
             /> */}
-            <div className="w-full h-44 relative">
+            <div className="w-full h-40 relative">
                 <LazyLoadImage
                     src={imgUrl}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover object-center"
                     alt="img"
                     // placeholder={<img src="./loader.gif" />}
                     placeholder={

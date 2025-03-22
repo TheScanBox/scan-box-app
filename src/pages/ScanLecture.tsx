@@ -23,6 +23,9 @@ function ScanLecture() {
     const [error, setError] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [scrollProgress, setScrollProgress] = useState(0);
+    const [chapterName, setChapterName] = useState<number>();
+    const [allChapters, setAllChapters] =
+        useState<{ [index: string]: number }[]>();
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
     // const hasMounted = useRef(false);
@@ -33,6 +36,7 @@ function ScanLecture() {
         state: {
             chapData: { [index: string]: number } | undefined;
             data: ScanResponse & { chap?: string };
+            allChapters: { [index: string]: number }[];
         };
     } = useLocation();
 
@@ -71,6 +75,16 @@ function ScanLecture() {
         return data;
     };
 
+    const fetchSpecialChap = async () => {
+        const { data, status } = await api.get(`/specials/?key=${param.id}`);
+
+        if (status != 200) {
+            throw new Error("Network response was not ok");
+        }
+
+        return data;
+    };
+
     const updateScrollProgress = (e: any) => {
         const scrollTop = e.target.scrollTop!;
         const scrollHeight = scrollRef?.current?.scrollHeight || 0;
@@ -89,7 +103,24 @@ function ScanLecture() {
         enabled: !state?.chapData,
     });
 
+    const {
+        data: specialChapters,
+        isLoading: specialChaptersLoading,
+        error: specialChaptersError,
+    } = useQuery<{ chap: number }[], Error>({
+        queryKey: [[`special_${param.id}`]],
+        queryFn: fetchSpecialChap,
+        enabled: !state?.allChapters,
+    });
+
     useEffect(() => {
+        if (!state.allChapters && !allChapters) return;
+        let all = state?.allChapters ? state?.allChapters : allChapters;
+
+        if (!all) return;
+
+        const [chapName] = Object.values(all[Number(selectedChap) - 1]);
+
         const updateData = async () => {
             await cloudStorage.setItem(
                 `selectedChap-${param.id}`,
@@ -104,6 +135,7 @@ function ScanLecture() {
                 imgUrl: state.data?.imgUrl,
                 title: state.data?.title,
                 chap: selectedChap,
+                chapName: chapName || "",
                 scanId: state.data.scanId,
                 scanPath: state.data.scanPath,
             };
@@ -152,15 +184,36 @@ function ScanLecture() {
             setLoading(false);
             setError(true);
         };
+
         firstImage.src = pages[0];
 
         setPageUrls(pages);
         setLoading(true);
+        setChapterName(chapName);
 
         updateData();
-    }, [selectedChap, state.data, chapData]);
+    }, [selectedChap, state.data, chapData, allChapters]);
 
-    if (error || loadError) {
+    useEffect(() => {
+        if (state?.allChapters || !specialChapters) return;
+
+        const chapDataLength = Object.keys(state?.chapData || chapData).length;
+        const speChapter = specialChapters.map((s) => s.chap);
+
+        const all = [
+            ...Array(chapDataLength - specialChapters.length + 1).keys(),
+            ...speChapter,
+        ]
+            .sort((a, b) => a - b)
+            .slice(1)
+            .map((el, idx) => ({
+                [idx + 1]: el,
+            }));
+
+        setAllChapters(all);
+    }, [specialChapters]);
+
+    if (error || loadError || specialChaptersError) {
         return (
             <Page>
                 <div className="h-screen flex flex-col justify-center items-center text-white">
@@ -177,7 +230,7 @@ function ScanLecture() {
         );
     }
 
-    if (isLoading) {
+    if (isLoading || specialChaptersLoading) {
         return (
             <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
                 <Loading />
@@ -198,7 +251,7 @@ function ScanLecture() {
                 <ScanLectureControls
                     numChap={Object.keys(state?.chapData || chapData).length}
                     setSelectedChap={setSelectedChap}
-                    selectedChap={selectedChap}
+                    selectedChap={chapterName?.toString() || ""}
                     scanID={param.id}
                     showControls={showControls}
                     title={state.data.title}

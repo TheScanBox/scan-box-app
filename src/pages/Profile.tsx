@@ -17,7 +17,7 @@ import useSafeArea from "../hooks/useSafeArea";
 import { IoMdClock } from "react-icons/io";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
-type Recent = Partial<ScanResponse> & { chap: string };
+type Recent = Partial<ScanResponse> & { chap: string; chapName: string };
 
 type Fav = Omit<Recent, "chap">;
 type UserInfo = {
@@ -206,9 +206,9 @@ function Profile() {
                                     <div
                                         onClick={() => handleRead(item)}
                                         key={index}
-                                        className="flex w-[8.5rem] min-w-[8.5rem] flex-col gap-2 text-white cursor-pointer"
+                                        className="flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer"
                                     >
-                                        <div className="w-full h-44 relative">
+                                        <div className="w-full h-40 relative">
                                             <LazyLoadImage
                                                 src={item.imgUrl}
                                                 className="w-full h-full object-cover"
@@ -220,23 +220,12 @@ function Profile() {
                                             />
                                             <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
                                         </div>
-                                        {/* <div
-                                            className="w-32 h-40 bg-cover bg-center"
-                                            style={{
-                                                backgroundImage: `url(${item.imgUrl})`,
-                                            }}
-                                        /> */}
-                                        {/* <img
-                                            src={item.imgUrl}
-                                            alt={item.title}
-                                            className="w-32 h-36 object-cover"
-                                        /> */}
                                         <div className="space-y-1">
                                             <p className="text-xs truncate capitalize">
                                                 {item.title}
                                             </p>
                                             <p className="text-[0.6rem] truncate text-slate-400">
-                                                CH {item.chap}
+                                                CH {item?.chapName || item.chap}
                                             </p>
                                         </div>
                                     </div>
