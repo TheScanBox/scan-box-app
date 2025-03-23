@@ -23,6 +23,8 @@ import { Page } from "../components/Page";
 import Loading from "../components/Loading";
 import api from "../libs/api";
 import useSafeArea from "../hooks/useSafeArea";
+import ScanListHeader from "../components/ScanListHeader";
+import { useAlert } from "../context/AlertContext";
 
 export type FavBookType = {
     img: string;
@@ -37,9 +39,18 @@ const capitalize = (text: string) => {
         .join(" ");
 };
 
+export const isObjectEmpty = (obj: Object | undefined) => {
+    if (typeof obj != "object" || obj == null) return false;
+    if (obj.hasOwnProperty("failed")) return true;
+
+    return Object.keys(obj).length == 0;
+};
+
 function ScanPreview() {
     const param = useParams();
     const navigate = useNavigate();
+
+    const { setUnAvailable } = useAlert();
 
     const [numChap, setNumChap] = useState(0);
     const [totalPage, setTotalPage] = useState(0);
@@ -53,6 +64,7 @@ function ScanPreview() {
     const [allChapters, setAllChapters] = useState<
         { [index: string]: number }[]
     >([]);
+    const [noData, setNoData] = useState(false);
 
     const { top, bottom } = useSafeArea();
 
@@ -85,9 +97,10 @@ function ScanPreview() {
     const {
         data: chapData,
         error: chapError,
+        isFetching: chapFetching,
         isLoading: chapLoading,
         refetch,
-    } = useQuery<{ [index: string]: number } | Error>({
+    } = useQuery<{ [index: string]: number | boolean; failed: boolean }>({
         queryKey: [`chap_${param.id}`],
         queryFn: fetchChap,
         staleTime: 600000,
@@ -102,6 +115,11 @@ function ScanPreview() {
     // }, []);
 
     useEffect(() => {
+        if (isObjectEmpty(chapData) && chapData?.failed == true) {
+            setNoData(true);
+            return;
+        }
+
         if (chapData) {
             const chapDataLength = Object.keys(chapData).length;
             const specialChapters =
@@ -336,6 +354,12 @@ function ScanPreview() {
         );
     }
 
+    if (chapData?.failed) {
+        setUnAvailable(true);
+    } else {
+        setUnAvailable(false);
+    }
+
     const getPageNumbers = () => {
         let start = Math.max(1, currentPage - 2);
         let end = Math.min(numPages, currentPage + 2);
@@ -467,9 +491,9 @@ function ScanPreview() {
                     ))}
                 </div>
 
-                {chapLoading && (
+                {(chapLoading || chapFetching) && (
                     <div
-                        className="flex flex-col justify-center items-center flex-1"
+                        className="flex flex-col justify-center items-center mt-14"
                         style={{
                             paddingBottom: bottom,
                         }}
@@ -481,26 +505,18 @@ function ScanPreview() {
                     </div>
                 )}
 
-                {!chapLoading && !chapError && (
+                {!chapLoading && !chapError && !noData && (
                     <>
-                        <div className="text-slate-300 flex justify-between items-center">
-                            <h1 className="text-sm">
-                                Chapitres -{" "}
-                                {numChap - (data?.specialChapters?.length || 0)}
-                            </h1>
-                            <div
-                                onClick={() => {
-                                    setOrder(order === "asc" ? "desc" : "asc");
-                                    setCurrentPage(
-                                        order === "asc" ? numPages : 1
-                                    );
-                                }}
-                                className="flex cursor-pointer"
-                            >
-                                <span className="text-sm">Trier</span>
-                                <LuArrowDownUp size={15} />
-                            </div>
-                        </div>
+                        <ScanListHeader
+                            numChap={numChap}
+                            numPages={numPages}
+                            order={order}
+                            specialChaptersLength={
+                                data?.specialChapters?.length || 0
+                            }
+                            setCurrentPage={setCurrentPage}
+                            setOrder={setOrder}
+                        />
 
                         <div className={`flex flex-col gap-2`}>
                             {order == "desc"
@@ -633,17 +649,30 @@ function ScanPreview() {
                     </>
                 )}
 
-                {chapError && (
-                    <div className="mt-8 text-white flex flex-col justify-center items-center flex-1 h-full">
-                        <p className="text-slate-300">
-                            An Unknown Error Occured
-                        </p>
-                        <button
-                            className="bg-red-600 px-3 py-2 rounded-lg mt-2 text-sm cursor-pointer hover:bg-red-600/50"
-                            onClick={() => refetch()}
-                        >
-                            Retry
-                        </button>
+                {(chapError || noData) && !chapFetching && (
+                    <div className="text-white flex flex-col justify-center items-center">
+                        <ScanListHeader
+                            numChap={numChap}
+                            numPages={numPages}
+                            order={order}
+                            specialChaptersLength={
+                                data?.specialChapters?.length || 0
+                            }
+                            setCurrentPage={setCurrentPage}
+                            setOrder={setOrder}
+                        />
+
+                        <div className="w-full flex flex-col items-center my-3">
+                            <p className="text-slate-300">
+                                An Unknown Error Occured
+                            </p>
+                            <button
+                                className="bg-red-600 px-3 py-2 rounded-lg mt-2 text-sm cursor-pointer hover:bg-red-600/50"
+                                onClick={() => refetch()}
+                            >
+                                Retry
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

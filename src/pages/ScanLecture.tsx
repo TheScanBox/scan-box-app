@@ -11,12 +11,16 @@ import Loading from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import ProgressBar from "../components/ProgressBar";
+import { isObjectEmpty } from "./ScanPreview";
+import { useAlert } from "../context/AlertContext";
 
 function ScanLecture() {
     const param = useParams() as {
         id: string;
         chapter: string;
     };
+
+    const { setUnAvailable } = useAlert();
 
     const [pageUrls, setPageUrls] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -196,6 +200,7 @@ function ScanLecture() {
 
     useEffect(() => {
         if (state?.allChapters || !specialChapters) return;
+        if (isObjectEmpty(chapData)) return;
 
         const chapDataLength = Object.keys(state?.chapData || chapData).length;
         const speChapter = specialChapters.map((s) => s.chap);
@@ -213,7 +218,18 @@ function ScanLecture() {
         setAllChapters(all);
     }, [specialChapters]);
 
-    if (error || loadError || specialChaptersError) {
+    if (chapData?.failed) {
+        setUnAvailable(true);
+    } else {
+        setUnAvailable(false);
+    }
+
+    if (
+        error ||
+        loadError ||
+        specialChaptersError ||
+        (!state.chapData && isObjectEmpty(chapData))
+    ) {
         return (
             <Page>
                 <div className="h-screen flex flex-col justify-center items-center text-white">

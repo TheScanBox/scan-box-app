@@ -5,6 +5,9 @@ import { useEffect } from "react";
 import { ScanPreview, Home, ScanLecture, More } from "./pages";
 import Auth from "./pages/Auth";
 import NotAllowed from "./pages/NotAllowed";
+import useSafeArea from "./hooks/useSafeArea";
+import { useAlert } from "./context/AlertContext";
+import { isFullscreen } from "@telegram-apps/sdk-react";
 
 type StringData = {
     name: string;
@@ -31,6 +34,9 @@ export type ScanResponse = {
 };
 
 function App() {
+    const { top } = useSafeArea();
+    const { unavailable } = useAlert();
+
     useEffect(() => {
         const disableContextMenu = (e: MouseEvent) => e.preventDefault();
         document.addEventListener("contextmenu", disableContextMenu);
@@ -41,17 +47,30 @@ function App() {
     }, []);
 
     return (
-        <Routes>
-            <Route path="/" element={<Auth />} />
-            <Route path="not-allowed" element={<NotAllowed />} />
-            <Route path="home" element={<Home />} />
-            <Route path="profile" element={<Profile />} />
-            <Route path="more/:id" element={<More />} />
-            <Route path="details/:id" element={<ScanPreview />} />
-            <Route path="read/:id/:chapter" element={<ScanLecture />} />
-            {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
-            <Route path="*" element={<NotFound />} />
-        </Routes>
+        <>
+            {unavailable && (
+                <div
+                    className="w-full py-1 bg-yellow-400 text-center text-xs sticky z-50"
+                    style={{
+                        // marginTop: top,
+                        top,
+                    }}
+                >
+                    Les scan sont indisponible pour le moment...
+                </div>
+            )}
+            <Routes>
+                <Route path="/" element={<Auth />} />
+                <Route path="not-allowed" element={<NotAllowed />} />
+                <Route path="home" element={<Home />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="more/:id" element={<More />} />
+                <Route path="details/:id" element={<ScanPreview />} />
+                <Route path="read/:id/:chapter" element={<ScanLecture />} />
+                {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+        </>
     );
 }
 

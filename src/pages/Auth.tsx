@@ -19,6 +19,7 @@ import Loading from "../components/Loading";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAlert } from "../context/AlertContext";
 
 init();
 miniAppReady();
@@ -39,6 +40,8 @@ const loadingMessages = [
 const Auth = () => {
     const navigate = useNavigate();
     const hasMounted = useRef(false);
+
+    const { setUnAvailable } = useAlert();
 
     const [index, setIndex] = useState(0);
 
@@ -143,13 +146,13 @@ const Auth = () => {
 
     useEffect(() => {
         const init = async () => {
-            const { tgWebAppPlatform } = retrieveLaunchParams();
+            // const { tgWebAppPlatform } = retrieveLaunchParams();
 
-            if (tgWebAppPlatform != "android" && tgWebAppPlatform != "ios") {
-                navigate("/not-allowed");
+            // if (tgWebAppPlatform != "android" && tgWebAppPlatform != "ios") {
+            //     navigate("/not-allowed");
 
-                return;
-            }
+            //     return;
+            // }
 
             const isMiniApp = await checkMiniApp();
 
@@ -167,6 +170,8 @@ const Auth = () => {
                 await miniApp.mount();
                 await mount();
                 await auth();
+
+                setUnAvailable(true);
             }
 
             if (bindMiniAppCssVars.isAvailable()) {
