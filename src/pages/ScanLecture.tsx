@@ -20,8 +20,6 @@ function ScanLecture() {
         chapter: string;
     };
 
-    const { setUnAvailable } = useAlert();
-
     const [pageUrls, setPageUrls] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
@@ -217,12 +215,6 @@ function ScanLecture() {
 
         setAllChapters(all);
     }, [specialChapters]);
-
-    if (chapData?.failed) {
-        setUnAvailable(true);
-    } else {
-        setUnAvailable(false);
-    }
 
     if (
         error ||

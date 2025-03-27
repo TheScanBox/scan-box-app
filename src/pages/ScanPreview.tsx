@@ -50,8 +50,6 @@ function ScanPreview() {
     const param = useParams();
     const navigate = useNavigate();
 
-    const { setUnAvailable } = useAlert();
-
     const [numChap, setNumChap] = useState(0);
     const [totalPage, setTotalPage] = useState(0);
     const [savedChap, setSavedChap] = useState<number | null>(null);
@@ -352,12 +350,6 @@ function ScanPreview() {
                 </div>
             </Page>
         );
-    }
-
-    if (chapData?.failed) {
-        setUnAvailable(true);
-    } else {
-        setUnAvailable(false);
     }
 
     const getPageNumbers = () => {
