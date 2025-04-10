@@ -171,7 +171,7 @@ const Auth = () => {
                 await mount();
                 await auth();
 
-                setUnAvailable(true);
+                // setUnAvailable(true);
             }
 
             if (bindMiniAppCssVars.isAvailable()) {
