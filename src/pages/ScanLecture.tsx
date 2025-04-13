@@ -197,8 +197,12 @@ function ScanLecture() {
     }, [selectedChap, state.data, chapData, allChapters]);
 
     useEffect(() => {
+        console.log(chapData, specialChapters, "Data");
+
         if (state?.allChapters || !specialChapters) return;
-        if (isObjectEmpty(chapData)) return;
+        if (isObjectEmpty(chapData) || !chapData) return;
+
+        console.log("Passed");
 
         const chapDataLength = Object.keys(state?.chapData || chapData).length;
         const speChapter = specialChapters.map((s) => s.chap);
@@ -214,7 +218,9 @@ function ScanLecture() {
             }));
 
         setAllChapters(all);
-    }, [specialChapters]);
+    }, [specialChapters, chapData]);
+
+    console.log(allChapters, "allchapters");
 
     if (
         error ||

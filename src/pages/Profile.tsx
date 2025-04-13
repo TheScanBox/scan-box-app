@@ -6,6 +6,8 @@ import {
     openTelegramLink,
     copyTextToClipboard,
     isFullscreen,
+    isPopupOpened,
+    openPopup,
 } from "@telegram-apps/sdk-react";
 import { Card } from "../components";
 import { Page } from "../components/Page";
@@ -14,8 +16,9 @@ import api from "../libs/api";
 import { useQuery } from "@tanstack/react-query";
 import Loading from "../components/Loading";
 import useSafeArea from "../hooks/useSafeArea";
-import { IoMdClock } from "react-icons/io";
+import { IoIosTrash } from "react-icons/io";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import { ResultItem } from "../components/Card";
 
 type Recent = Partial<ScanResponse> & { chap: string; chapName: string };
 
@@ -34,6 +37,7 @@ function Profile() {
     const [recent, setRecent] = useState<Recent[]>([]);
     const [favourites, setFavourites] = useState<Fav[]>([]);
     const [bookmarks, setBoomarks] = useState<Fav[]>([]);
+    const [hideIds, setHideIds] = useState<string[]>([]);
 
     const { top, bottom } = useSafeArea();
 
@@ -69,6 +73,42 @@ function Profile() {
                 data,
             },
         });
+    };
+
+    const handleDelete = async (title: string, type: string, id: string) => {
+        if (isPopupOpened()) return;
+
+        const result = await openPopup({
+            message: `Supprime ${title} de la liste ?`,
+            buttons: [
+                {
+                    type: "cancel",
+                },
+                {
+                    text: "Confirme",
+                    type: "destructive",
+                    id: "delete",
+                },
+            ],
+        });
+
+        if (result != "delete") return;
+        if (!type) return;
+
+        const results = (await cloudStorage.getItem(type)) as unknown as {
+            [index: string]: string;
+        };
+        if (!results) return;
+
+        const ResultsArr: ResultItem[] = JSON.parse(results[type]);
+
+        const filteredResults = ResultsArr.filter(
+            (result) => result.scanId != id
+        );
+
+        setHideIds?.((prev) => [...prev, `${type}_${id}`]);
+
+        await cloudStorage.setItem(type, JSON.stringify([...filteredResults]));
     };
 
     useEffect(() => {
@@ -206,7 +246,13 @@ function Profile() {
                                     <div
                                         onClick={() => handleRead(item)}
                                         key={index}
-                                        className="flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer"
+                                        className={`flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer  ${
+                                            hideIds?.includes(
+                                                `recents_${item.scanId!}`
+                                            )
+                                                ? "hidden"
+                                                : ""
+                                        }`}
                                     >
                                         <div className="w-full h-40 relative">
                                             <LazyLoadImage
@@ -219,6 +265,20 @@ function Profile() {
                                                 }
                                             />
                                             <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
+                                            <div
+                                                className="absolute top-2 right-2 z-20 hover:text-red-700"
+                                                onClick={async (e) => {
+                                                    e.stopPropagation();
+
+                                                    await handleDelete(
+                                                        item.title!,
+                                                        "recents",
+                                                        item.scanId!
+                                                    );
+                                                }}
+                                            >
+                                                <IoIosTrash size={20} />
+                                            </div>
                                         </div>
                                         <div className="space-y-1">
                                             <p className="text-xs truncate capitalize">
@@ -252,6 +312,10 @@ function Profile() {
                                         title={item.title!}
                                         stars={item.stars || "N/A"}
                                         helpPath="../"
+                                        isProfile={true}
+                                        type="favourites"
+                                        hideIds={hideIds}
+                                        setHideIds={setHideIds}
                                     />
                                 ))
                             )}
@@ -276,6 +340,10 @@ function Profile() {
                                         title={item.title!}
                                         stars={item.stars || "N/A"}
                                         helpPath="../"
+                                        isProfile={true}
+                                        type="bookmarks"
+                                        hideIds={hideIds}
+                                        setHideIds={setHideIds}
                                     />
                                 ))
                             )}

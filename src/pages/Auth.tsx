@@ -146,13 +146,13 @@ const Auth = () => {
 
     useEffect(() => {
         const init = async () => {
-            // const { tgWebAppPlatform } = retrieveLaunchParams();
+            const { tgWebAppPlatform } = retrieveLaunchParams();
 
-            // if (tgWebAppPlatform != "android" && tgWebAppPlatform != "ios") {
-            //     navigate("/not-allowed");
+            if (tgWebAppPlatform != "android" && tgWebAppPlatform != "ios") {
+                navigate("/not-allowed");
 
-            //     return;
-            // }
+                return;
+            }
 
             const isMiniApp = await checkMiniApp();
 

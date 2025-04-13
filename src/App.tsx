@@ -7,7 +7,7 @@ import Auth from "./pages/Auth";
 import NotAllowed from "./pages/NotAllowed";
 import useSafeArea from "./hooks/useSafeArea";
 import { useAlert } from "./context/AlertContext";
-import { isFullscreen } from "@telegram-apps/sdk-react";
+import { IoMdClose } from "react-icons/io";
 
 type StringData = {
     name: string;
@@ -35,7 +35,7 @@ export type ScanResponse = {
 
 function App() {
     const { top } = useSafeArea();
-    const { unavailable } = useAlert();
+    const { unavailable, setUnAvailable } = useAlert();
 
     useEffect(() => {
         const disableContextMenu = (e: MouseEvent) => e.preventDefault();
@@ -50,15 +50,22 @@ function App() {
         <>
             {unavailable && (
                 <div
-                    className="w-full py-1 bg-yellow-400 text-center text-xs sticky z-50"
+                    className="w-full py-1 bg-yellow-400 text-center text-xs sticky z-50 flex flex-row justify-between items-center px-3"
                     style={{
                         // marginTop: top,
                         top,
                     }}
                 >
-                    Les scan sont indisponible pour le moment...
+                    <div>Les scan sont indisponible pour le moment...</div>
+                    <div
+                        className="cursor-pointer"
+                        onClick={() => setUnAvailable(false)}
+                    >
+                        <IoMdClose size={14} />
+                    </div>
                 </div>
             )}
+
             <Routes>
                 <Route path="/" element={<Auth />} />
                 <Route path="not-allowed" element={<NotAllowed />} />
