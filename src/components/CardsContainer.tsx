@@ -63,7 +63,12 @@ function CardsContainer({
             <div className=" flex gap-2 overflow-x-auto no-scrollbar">
                 {!!data?.length &&
                     data?.map((scan) => (
-                        <Card key={scan?.id} {...scan} id={scan.scanId} />
+                        <Card
+                            key={scan?.id}
+                            {...scan}
+                            id={scan.scanId}
+                            type={undefined}
+                        />
                     ))}
             </div>
         </section>
