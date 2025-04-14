@@ -20,6 +20,8 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAlert } from "../context/AlertContext";
+import api from "../libs/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 init();
 miniAppReady();
@@ -40,6 +42,7 @@ const loadingMessages = [
 const Auth = () => {
     const navigate = useNavigate();
     const hasMounted = useRef(false);
+    const queryClient = useQueryClient();
 
     const { setUnAvailable } = useAlert();
 
@@ -84,7 +87,7 @@ const Auth = () => {
         const user = tgWebAppData?.user;
 
         const startParam = tgWebAppStartParam ? tgWebAppStartParam : "";
-        const [command, payload] = startParam.split("_");
+        const [command, payload, chap] = startParam.split("_");
 
         try {
             const res = await axios.post(
@@ -119,6 +122,42 @@ const Auth = () => {
             sessionStorage.setItem("token", token);
 
             if (command == "read") {
+                if (chap) {
+                    try {
+                        console.log(payload);
+
+                        const { data, status } = await api.get(
+                            `/scan?scanID=${payload}`
+                        );
+
+                        if (status != 200) {
+                            throw new Error("Network response was not ok");
+                        }
+
+                        queryClient.setQueryData([`scan_${payload}`], data);
+
+                        navigate(`/read/${payload}/${chap}`, {
+                            state: {
+                                data: {
+                                    imgUrl: data.imgUrl,
+                                    title: data.title,
+                                    scanId: data.scanId,
+                                    scanPath: data.scanPath,
+                                },
+                            },
+                            replace: true,
+                        });
+                    } catch (error) {
+                        console.log(error);
+
+                        navigate(`/home`, {
+                            replace: true,
+                        });
+                    }
+
+                    return;
+                }
+
                 navigate(`/details/${payload}`, {
                     replace: true,
                 });

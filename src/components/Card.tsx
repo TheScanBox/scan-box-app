@@ -50,15 +50,16 @@ function Card({
         if (isPopupOpened()) return;
 
         const result = await openPopup({
+            title: "Supprime",
             message: `Supprime ${title} de la liste ?`,
             buttons: [
-                {
-                    type: "cancel",
-                },
                 {
                     text: "Confirme",
                     type: "destructive",
                     id: "delete",
+                },
+                {
+                    type: "cancel",
                 },
             ],
         });

@@ -37,6 +37,20 @@ export function Page({
                 return;
             }
 
+            if (
+                window.history.length <= 2 &&
+                location.pathname.includes("read")
+            ) {
+                const scanId = location.pathname.split("/")[2];
+
+                navigate(`../details/${scanId}`, {
+                    replace: true,
+                });
+                // navigate("/home");
+
+                return;
+            }
+
             navigate(-1);
         });
     }, []);

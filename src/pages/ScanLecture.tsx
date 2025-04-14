@@ -11,7 +11,7 @@ import Loading from "../components/Loading";
 import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import ProgressBar from "../components/ProgressBar";
-import { isObjectEmpty } from "./ScanPreview";
+import { capitalize, isObjectEmpty } from "./ScanPreview";
 import { useAlert } from "../context/AlertContext";
 
 function ScanLecture() {
@@ -19,6 +19,7 @@ function ScanLecture() {
         id: string;
         chapter: string;
     };
+    const location = useLocation();
 
     const [pageUrls, setPageUrls] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ function ScanLecture() {
     const [showControls, setShowControls] = useState(true);
     const [scrollProgress, setScrollProgress] = useState(0);
     const [chapterName, setChapterName] = useState<number>();
+    const [notFound, setNotFound] = useState(false);
     const [allChapters, setAllChapters] =
         useState<{ [index: string]: number }[]>();
 
@@ -197,12 +199,8 @@ function ScanLecture() {
     }, [selectedChap, state.data, chapData, allChapters]);
 
     useEffect(() => {
-        console.log(chapData, specialChapters, "Data");
-
         if (state?.allChapters || !specialChapters) return;
         if (isObjectEmpty(chapData) || !chapData) return;
-
-        console.log("Passed");
 
         const chapDataLength = Object.keys(state?.chapData || chapData).length;
         const speChapter = specialChapters.map((s) => s.chap);
@@ -217,10 +215,34 @@ function ScanLecture() {
                 [idx + 1]: el,
             }));
 
+        if (Number(selectedChap) > all.length) {
+            setNotFound(true);
+
+            return;
+        }
         setAllChapters(all);
     }, [specialChapters, chapData]);
 
-    console.log(allChapters, "allchapters");
+    if (notFound) {
+        const scanId = location.pathname.split("/")[2];
+
+        return (
+            <Page>
+                <div className="h-screen flex flex-col justify-center items-center text-white">
+                    <h1 className="text-2xl font-bold">Chapitre Introuvable</h1>
+                    <p className="text-sm text-slate-400">Please Try Later</p>
+
+                    <Link
+                        to={`../details/${scanId}`}
+                        replace
+                        className="underline text-sm mt-3 text-red-600 "
+                    >
+                        Back To {capitalize(state.data.title)}
+                    </Link>
+                </div>
+            </Page>
+        );
+    }
 
     if (
         error ||
@@ -249,7 +271,7 @@ function ScanLecture() {
             <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
                 <Loading />
                 <p className="text-xs text-slate-400 mt-4">
-                    Chargement des données...
+                    Chargement de la Page...
                 </p>
             </div>
         );
@@ -265,7 +287,8 @@ function ScanLecture() {
                 <ScanLectureControls
                     numChap={Object.keys(state?.chapData || chapData).length}
                     setSelectedChap={setSelectedChap}
-                    selectedChap={chapterName?.toString() || ""}
+                    selectedChapName={chapterName?.toString() || ""}
+                    selectedChap={selectedChap}
                     scanID={param.id}
                     showControls={showControls}
                     title={state.data.title}

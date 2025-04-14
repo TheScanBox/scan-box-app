@@ -32,7 +32,7 @@ export type FavBookType = {
     scanId: string;
 };
 
-const capitalize = (text: string) => {
+export const capitalize = (text: string) => {
     return text
         .split(" ")
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
