@@ -61,7 +61,7 @@ function Banner({ data }: { data: ScanResponse[] }) {
                 <div className="flex flex-1 justify-center items-center w-1/4">
                     <Link
                         className="p-2 rounded-full bg-blue-500 w-full text-center"
-                        to={`/details/${data[index].scanId}`}
+                        to={`/details/${data[index].scanId}/${data[index].scanSubId}`}
                     >
                         Lire
                     </Link>

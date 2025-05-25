@@ -2,15 +2,17 @@ import SearchBar from "./SearchBar";
 import CardLoading from "./Loading/CardLoading";
 import Footer from "./Footer";
 import useSafeArea from "../hooks/useSafeArea";
+import { useAlert } from "../context/AlertContext";
 
 function HomeLoading() {
     const { top } = useSafeArea();
+    const { unavailable } = useAlert();
 
     return (
         <section
             className="relative"
             style={{
-                marginTop: top,
+                marginTop: unavailable ? 0 : top,
             }}
         >
             <div className="p-3 pb-8">

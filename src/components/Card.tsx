@@ -7,6 +7,7 @@ import {
     isPopupOpened,
     cloudStorage,
 } from "@telegram-apps/sdk-react";
+import { ScanResponse } from "../App";
 
 export type ResultItem = {
     imgUrl: string | undefined;
@@ -17,6 +18,7 @@ export type ResultItem = {
 
 type CardProps = {
     id: string;
+    subId: string;
     imgUrl: string;
     title: string;
     stars: number | string;
@@ -33,6 +35,7 @@ function Card({
     title,
     stars,
     id,
+    subId,
     helpPath,
     isMore = false,
     isProfile,
@@ -86,10 +89,10 @@ function Card({
     return (
         <div
             className={`active:opacity-5 cursor-pointer ${
-                isMore ? "w-full flex-1 " : "min-w-32 w-32"
+                isMore ? "w-full flex-1" : "min-w-32 w-32"
             } ${hideIds?.includes(`${type}_${id}`) ? "hidden" : ""}`}
             onClick={() =>
-                navigate(`${helpPath ? helpPath : ""}../details/${id}`)
+                navigate(`${helpPath ? helpPath : ""}../details/${id}/${subId}`)
             }
         >
             {/* <div

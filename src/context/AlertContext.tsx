@@ -13,7 +13,7 @@ const AlertContext = createContext<AlertContextType>({
 });
 
 export const AlertContextProvider = ({ children }: { children: ReactNode }) => {
-    const [unavailable, setUnAvailable] = useState(false);
+    const [unavailable, setUnAvailable] = useState(false); // state should be fetch from server
 
     return (
         <AlertContext.Provider value={{ unavailable, setUnAvailable }}>

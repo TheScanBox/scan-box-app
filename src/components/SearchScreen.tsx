@@ -6,6 +6,7 @@ import Loading from "./Loading";
 import { openTelegramLink } from "@telegram-apps/sdk-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
+import useSafeArea from "../hooks/useSafeArea";
 
 type SearchScreenProps = {
     debouncedSearchText: string;
@@ -22,6 +23,8 @@ const fetchResults = async (query: string) => {
 };
 
 function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
+    const { bottom } = useSafeArea();
+
     const {
         data: searchResults,
         isLoading,
@@ -29,12 +32,12 @@ function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
     } = useQuery<ScanResponse[]>({
         queryKey: ["search", `${debouncedSearchText}`],
         queryFn: () => fetchResults(debouncedSearchText),
-        enabled: debouncedSearchText.length > 0,
+        enabled: debouncedSearchText.length >= 3,
     });
 
     if (isLoading) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen overflow-y-hidden text-white">
+            <div className="flex flex-col justify-center items-center overflow-y-hidden text-white mt-8">
                 <Loading />
                 <p className="text-xs text-slate-400 mt-2">Chargement...</p>
             </div>
@@ -43,7 +46,7 @@ function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
 
     if (!isLoading && error) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen overflow-y-hidden text-white">
+            <div className="flex flex-col justify-center items-center overflow-y-hidden text-white mt-8">
                 <p className="text-xs text-slate-400 mt-2">
                     Something Went Wrong...
                 </p>
@@ -51,10 +54,13 @@ function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
         );
     }
 
-    console.log("res", searchResults);
-
     return (
-        <div className="mt-4 flex flex-col gap-3 h-screen">
+        <div
+            className="mt-4 flex flex-col gap-3"
+            style={{
+                paddingBottom: bottom ? bottom : "1rem",
+            }}
+        >
             {!!searchResults?.length &&
                 searchResults?.map((result) => (
                     <SearchResult
@@ -64,7 +70,7 @@ function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
                     />
                 ))}
 
-            {!searchResults?.length && (
+            {!searchResults?.length && debouncedSearchText.length >= 3 && (
                 <div className="flex flex-col justify-center h-full items-center overflow-y-hidden text-white">
                     <h1 className="text-xl font-bold">Scan Not Found</h1>
                     <p

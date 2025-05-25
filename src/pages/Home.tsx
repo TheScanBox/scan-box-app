@@ -15,15 +15,16 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import { debounce } from "lodash";
 import useSafeArea from "../hooks/useSafeArea";
+import { useAlert } from "../context/AlertContext";
 
 function Home() {
     const [search, setSearch] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
     const { top, bottom } = useSafeArea();
+    const { unavailable } = useAlert();
 
     const debouncedSearch = debounce((query) => {
-        console.log("bouncr");
         setDebouncedSearchTerm(query);
     }, 500);
 
@@ -100,11 +101,11 @@ function Home() {
             <section
                 className="relative lg:max-w-[700px] mx-auto"
                 style={{
-                    marginTop: top,
+                    marginTop: unavailable ? 0 : top,
                     marginBottom: bottom,
                 }}
             >
-                <section className="p-3 pb-8 h-full">
+                <section className="px-3 pt-3 h-full">
                     <SearchBar
                         search={search}
                         handleSearch={handleSearch}

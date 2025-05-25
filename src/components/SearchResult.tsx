@@ -2,9 +2,15 @@ import { Link } from "react-router-dom";
 import { ScanResponse } from "../App";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 
-function SearchResult({ id, imgUrl, title, author }: Partial<ScanResponse>) {
+function SearchResult({
+    id,
+    imgUrl,
+    title,
+    author,
+    scanSubId,
+}: Partial<ScanResponse>) {
     return (
-        <Link to={`/details/${id}`}>
+        <Link to={`/details/${id}/${scanSubId}`}>
             <div className="flex gap-2 text-white">
                 <LazyLoadImage
                     src={imgUrl}

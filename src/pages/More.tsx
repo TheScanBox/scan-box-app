@@ -121,6 +121,7 @@ const More = () => {
                                     id={scan.scanId}
                                     imgUrl={scan.imgUrl}
                                     stars={scan.stars}
+                                    subId={scan.scanSubId}
                                     title={scan.title}
                                     helpPath="../"
                                     isMore={true}

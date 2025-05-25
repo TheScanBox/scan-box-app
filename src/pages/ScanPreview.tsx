@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ScanResponse } from "../App";
-import { AiFillEye, AiFillHeart, AiFillStar } from "react-icons/ai";
+import {
+    AiFillEye,
+    AiFillHeart,
+    AiFillStar,
+    AiOutlineDown,
+} from "react-icons/ai";
 import { CiBookmark } from "react-icons/ci";
-import { LuArrowDownUp } from "react-icons/lu";
 import {
     IoMdArrowDropright,
     IoIosArrowForward,
@@ -12,7 +16,6 @@ import {
 import {
     openTelegramLink,
     cloudStorage,
-    isFullscreen,
     exitFullscreen,
     mountViewport,
 } from "@telegram-apps/sdk-react";
@@ -65,6 +68,7 @@ function ScanPreview() {
     const [noData, setNoData] = useState(false);
 
     const { top, bottom } = useSafeArea();
+    const { unavailable } = useAlert();
 
     const fetchData = async () => {
         const { data, status } = await api.get(`/scan?scanID=${param.id}`);
@@ -77,7 +81,9 @@ function ScanPreview() {
     };
 
     const fetchChap = async () => {
-        const { data, status } = await api.get(`/?key=${param.id}`);
+        const { data, status } = await api.get(
+            `/?key=${param.id}&subId=${param.subid || ""}`
+        );
 
         if (status != 200) {
             throw new Error("Network response was not ok");
@@ -87,7 +93,7 @@ function ScanPreview() {
     };
 
     const { data, error, isLoading } = useQuery<ScanResponse>({
-        queryKey: [`scan_${param.id}`],
+        queryKey: [`scan_${param.id}_${param.subid}`],
         queryFn: fetchData,
         staleTime: 600000,
     });
@@ -309,7 +315,7 @@ function ScanPreview() {
                 <div
                     className="p-3 space-y-4 animate-pulse w-full lg:max-w-[700px] mx-auto"
                     style={{
-                        marginTop: top,
+                        marginTop: unavailable ? 0 : top,
                     }}
                 >
                     <div className="w-full h-56 flex gap-4">
@@ -374,7 +380,7 @@ function ScanPreview() {
             <div
                 className="p-3 space-y-4 relative h-screen flex flex-col lg:max-w-[700px] mx-auto select-none"
                 style={{
-                    marginTop: top,
+                    marginTop: unavailable ? 0 : top,
                 }}
             >
                 <div className="w-full min-h-56 flex gap-2">
@@ -398,8 +404,8 @@ function ScanPreview() {
                             <h2 className="text-lg text-white font-bold break-words capitalize">
                                 {data?.title}
                             </h2>
-                            <p className="text-xs text-slate-400 truncate">
-                                Par {data?.author?.name ?? "Kazuya Morida"}
+                            <p className="text-xs text-slate-400 truncate capitalize">
+                                Par {data?.author?.name ?? "Unknown"}
                             </p>
                         </div>
 
@@ -411,13 +417,13 @@ function ScanPreview() {
                                 </span>
                             </p>
 
-                            <p className="flex items-center gap-1">
-                                <AiFillEye color="white" />
-                                <span className="text-white text-xs">N/A</span>
+                            <p className="flex items-center gap-1 text-slate-400">
+                                <AiFillEye />
+                                <span className="text-xs">N/A</span>
                             </p>
                         </div>
 
-                        <div className="flex gap-4">
+                        <div className="flex items-center gap-3">
                             <button
                                 onClick={() => handleMarks("favourites")}
                                 className={`p-2 flex rounded-md ${
@@ -581,7 +587,7 @@ function ScanPreview() {
                         <div
                             className="flex items-center pb-4 gap-3 justify-center w-full"
                             style={{
-                                paddingBottom: isFullscreen() ? bottom : "1rem",
+                                paddingBottom: bottom ? bottom : "1rem",
                             }}
                         >
                             <div

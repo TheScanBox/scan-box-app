@@ -19,6 +19,7 @@ import useSafeArea from "../hooks/useSafeArea";
 import { IoIosTrash } from "react-icons/io";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { ResultItem } from "../components/Card";
+import { useAlert } from "../context/AlertContext";
 
 type Recent = Partial<ScanResponse> & { chap: string; chapName: string };
 
@@ -40,6 +41,7 @@ function Profile() {
     const [hideIds, setHideIds] = useState<string[]>([]);
 
     const { top, bottom } = useSafeArea();
+    const { unavailable } = useAlert();
 
     const { tgWebAppData } = retrieveLaunchParams();
     const user = tgWebAppData?.user;
@@ -165,9 +167,9 @@ function Profile() {
     return (
         <Page>
             <div
-                className="p-4 text-white h-screen pb-10 lg:max-w-[700px] mx-auto relative"
+                className="p-3 text-white lg:max-w-[700px] mx-auto relative"
                 style={{
-                    marginTop: top,
+                    marginTop: unavailable ? 0 : top,
                 }}
             >
                 <div className="flex gap-4 items-center mt-2">
@@ -309,6 +311,7 @@ function Profile() {
                                     <Card
                                         key={item.scanId}
                                         id={item.scanId!}
+                                        subId=""
                                         imgUrl={item.imgUrl!}
                                         title={item.title!}
                                         stars={item.stars || "N/A"}
@@ -339,6 +342,7 @@ function Profile() {
                                         id={item.scanId!}
                                         imgUrl={item.imgUrl!}
                                         title={item.title!}
+                                        subId=""
                                         stars={item.stars || "N/A"}
                                         helpPath="../"
                                         isProfile={true}
@@ -349,24 +353,6 @@ function Profile() {
                                 ))
                             )}
                         </div>
-                    </div>
-
-                    <div
-                        className={`flex justify-center w-full items-center ${
-                            !isFullscreen() && "py-3"
-                        }`}
-                    >
-                        <p className="text-slate-500 text-xs">
-                            Made With <span className="text-red-600">❤</span> By{" "}
-                            <span
-                                className="underline font-bold"
-                                onClick={() =>
-                                    openTelegramLink("https://t.me/TheScanBox")
-                                }
-                            >
-                                TheScanBox
-                            </span>
-                        </p>
                     </div>
                 </div>
             </div>
