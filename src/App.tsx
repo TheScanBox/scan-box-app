@@ -44,11 +44,7 @@ function App() {
 
     const { tgWebAppData } = retrieveLaunchParams();
 
-    useHeartbeat(tgWebAppData?.user?.id?.toString() || "", 10000);
-
-    // useEffect(() => {
-    //     on("visibility_changed", () => alert("change"));
-    // }, []);
+    useHeartbeat(tgWebAppData?.user?.id?.toString() || "", intervalMs);
 
     useEffect(() => {
         const disableContextMenu = (e: MouseEvent) => e.preventDefault();
