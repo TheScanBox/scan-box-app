@@ -1,15 +1,13 @@
 import { Route, Routes } from "react-router-dom";
-import { NotFound, Profile } from "./components";
+import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
 import { useEffect } from "react";
 
-import { ScanPreview, Home, ScanLecture, More } from "./pages";
-import Auth from "./pages/Auth";
+import { ScanPreview, Home, ScanLecture, More, Auth, Tags } from "./pages";
 import NotAllowed from "./pages/NotAllowed";
-import useSafeArea from "./hooks/useSafeArea";
-import { useAlert } from "./context/AlertContext";
-import { IoMdClose } from "react-icons/io";
-import { on, retrieveLaunchParams } from "@telegram-apps/sdk-react";
+
+import { NotFound, Profile } from "./components";
 import useHeartbeat from "./hooks/useHeartbeat";
+import AlertMessage from "./components/AlertMessage";
 
 type StringData = {
     name: string;
@@ -20,7 +18,7 @@ export type ScanResponse = {
     title: string;
     originalTitle: string;
     scanId: string;
-    scanSubId: string;
+    scanParentId: string;
     scanPath: string;
     description: string;
     stars: number;
@@ -39,9 +37,6 @@ export type ScanResponse = {
 const intervalMs = 60000;
 
 function App() {
-    const { top } = useSafeArea();
-    const { unavailable, setUnAvailable } = useAlert();
-
     const { tgWebAppData } = retrieveLaunchParams();
 
     useHeartbeat(tgWebAppData?.user?.id?.toString() || "", intervalMs);
@@ -57,25 +52,7 @@ function App() {
 
     return (
         <>
-            {unavailable && (
-                <div
-                    className="w-full py-1 bg-red-500 text-white text-center text-xs z-50 flex flex-row justify-between items-center px-3"
-                    style={{
-                        paddingTop: top,
-                    }}
-                >
-                    <div>
-                        Les scan sont indisponible pour le moment. Reessaye plus
-                        tard
-                    </div>
-                    <div
-                        className="cursor-pointer min-w-5"
-                        onClick={() => setUnAvailable(false)}
-                    >
-                        <IoMdClose size={16} />
-                    </div>
-                </div>
-            )}
+            <AlertMessage />
 
             <Routes>
                 <Route path="/" element={<Auth />} />
@@ -83,8 +60,15 @@ function App() {
                 <Route path="home" element={<Home />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="more/:id" element={<More />} />
-                <Route path="details/:id/:subid?" element={<ScanPreview />} />
-                <Route path="read/:id/:chapter" element={<ScanLecture />} />
+                <Route path="tags/:id" element={<Tags />} />
+                <Route
+                    path="details/:id/:parentId?"
+                    element={<ScanPreview />}
+                />
+                <Route
+                    path="read/:id/:chapter/:parentId?"
+                    element={<ScanLecture />}
+                />
                 {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
                 <Route path="*" element={<NotFound />} />
             </Routes>

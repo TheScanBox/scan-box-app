@@ -6,9 +6,12 @@
 
 @layer base {
     body {
-        /* @apply bg-slate-800; */
         @apply bg-slate-800;
         font-family: "Poppins";
+    }
+
+    button {
+        @apply outline-none;
     }
 
     button:disabled {

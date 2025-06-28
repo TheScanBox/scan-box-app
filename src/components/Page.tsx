@@ -41,12 +41,16 @@ export function Page({
                 window.history.length <= 2 &&
                 location.pathname.includes("read")
             ) {
-                const scanId = location.pathname.split("/")[2];
+                const [, , scanId, , scanParentId] =
+                    location.pathname.split("/");
 
-                navigate(`../details/${scanId}`, {
+                const path = scanParentId
+                    ? `../details/${scanId}/${scanParentId}`
+                    : `../details/${scanId}`;
+
+                navigate(path, {
                     replace: true,
                 });
-                // navigate("/home");
 
                 return;
             }

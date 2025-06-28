@@ -1,41 +1,32 @@
-import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { ScanResponse } from "../App";
-import { Card } from "../components";
 import { Page } from "../components/Page";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import api from "../libs/api";
-import Loading from "../components/Loading";
-import { useInView } from "react-intersection-observer";
 import useSafeArea from "../hooks/useSafeArea";
+import { ScanResponse } from "../App";
+import api from "../libs/api";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import Loading from "../components/Loading";
+import { splitArray } from "./More";
+import { Card } from "../components";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
 import { useAlert } from "../context/AlertContext";
 
 const PAGE_SIZE = 10;
 
-export const splitArray = (arr: ScanResponse[], size: number) => {
-    const results = [];
+const Tags = () => {
+    const params = useParams() as { id: string };
+    const { top, bottom } = useSafeArea();
+    const { showAlert } = useAlert();
 
-    for (let i = 0; i < arr.length; i += size) {
-        results.push(arr.slice(i, i + size));
-    }
-
-    return results;
-};
-
-const More = () => {
-    const params = useParams();
     const { inView, ref } = useInView({
         threshold: 0.1,
     });
 
-    const { top, bottom } = useSafeArea();
-    const { showAlert } = useAlert();
-
-    const fetchMore = async ({
+    const fetchTags = async ({
         pageParam = 1,
     }: any): Promise<ScanResponse[]> => {
         const { data, status } = await api.get(
-            `/more?id=${params.id}&page=${pageParam}`
+            `/tag?id=${params.id}&page=${pageParam}`
         );
 
         if (status != 200) {
@@ -54,8 +45,8 @@ const More = () => {
         hasNextPage,
         refetch,
     } = useInfiniteQuery<ScanResponse[], Error>({
-        queryKey: [`more_${params.id}`],
-        queryFn: fetchMore,
+        queryKey: [`tag_${params.id}`],
+        queryFn: fetchTags,
         getNextPageParam: (lastPage, pages) =>
             lastPage.length == PAGE_SIZE ? pages?.length + 1 : undefined,
         initialPageParam: 1,
@@ -99,6 +90,8 @@ const More = () => {
         );
     }
 
+    console.log(scans);
+
     return (
         <Page>
             <section
@@ -107,8 +100,8 @@ const More = () => {
                     marginTop: showAlert ? 0 : top,
                 }}
             >
-                <h1 className="text-white text-3xl mb-3 capitalize">
-                    {params.id == "recent" ? "Récemment Ajouté" : params.id}
+                <h1 className="text-white text-3xl mb-3 capitalize truncate">
+                    Genre {params.id}
                 </h1>
 
                 <div className="flex flex-col">
@@ -155,5 +148,4 @@ const More = () => {
         </Page>
     );
 };
-
-export default More;
+export default Tags;

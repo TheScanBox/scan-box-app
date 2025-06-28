@@ -7,10 +7,10 @@ function SearchResult({
     imgUrl,
     title,
     author,
-    scanSubId,
+    scanParentId,
 }: Partial<ScanResponse>) {
     return (
-        <Link to={`/details/${id}/${scanSubId}`}>
+        <Link to={`/details/${id}/${scanParentId}`}>
             <div className="flex gap-2 text-white">
                 <LazyLoadImage
                     src={imgUrl}

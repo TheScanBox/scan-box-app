@@ -24,7 +24,7 @@ function ScanLectureControls({
     setShowLightConfig,
 }: ScanLectureControlsProps) {
     const { top } = useSafeArea();
-    const { unavailable } = useAlert();
+    const { showAlert } = useAlert();
 
     const handleCopy = () => {
         const APP_URL = import.meta.env.VITE_APP_URL;
@@ -61,13 +61,13 @@ function ScanLectureControls({
                 showControls ? "show-controls" : "hidden"
             } w-full text-white font-light fixed bg-black/90 p-3 z-30`}
             style={{
-                paddingTop: top ? (unavailable ? 10 : top) : "1rem",
+                paddingTop: top ? (showAlert ? 10 : top) : "1rem",
             }}
         >
             <div
                 className="flex items-center w-full font-semibold"
                 // style={{
-                //     paddingTop: unavailable ? 10 : 0,
+                //     paddingTop: showAlert ? 10 : 0,
                 // }}
             >
                 <p className="truncate max-w-36 capitalize">{title}</p>

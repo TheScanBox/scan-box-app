@@ -67,7 +67,7 @@ function CardsContainer({
                             key={scan?.id}
                             {...scan}
                             id={scan.scanId}
-                            subId={scan.scanSubId}
+                            parentId={scan.scanParentId}
                             type={undefined}
                         />
                     ))}

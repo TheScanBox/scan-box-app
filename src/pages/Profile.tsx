@@ -39,9 +39,10 @@ function Profile() {
     const [favourites, setFavourites] = useState<Fav[]>([]);
     const [bookmarks, setBoomarks] = useState<Fav[]>([]);
     const [hideIds, setHideIds] = useState<string[]>([]);
+    const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
 
     const { top, bottom } = useSafeArea();
-    const { unavailable } = useAlert();
+    const { showAlert } = useAlert();
 
     const { tgWebAppData } = retrieveLaunchParams();
     const user = tgWebAppData?.user;
@@ -70,7 +71,11 @@ function Profile() {
     });
 
     const handleRead = (data: Recent) => {
-        navigate(`../read/${data.scanId}/${data.chap}`, {
+        const path = data.scanParentId
+            ? `../read/${data.scanId}/${data.chap}/${data.scanParentId}`
+            : `../read/${data.scanId}/${data.chap}`;
+
+        navigate(path, {
             state: {
                 data,
             },
@@ -114,6 +119,19 @@ function Profile() {
         await cloudStorage.setItem(type, JSON.stringify([...filteredResults]));
     };
 
+    // useEffect(() => {
+    //     const resetData = async () => {
+    //         await cloudStorage.setItem("favourites", "");
+    //         await cloudStorage.setItem("bookmarks", "");
+    //         await cloudStorage.setItem("recents", "");
+
+    //         console.log("Reset");
+    //         alert("reset");
+    //     };
+
+    //     resetData();
+    // }, []);
+
     useEffect(() => {
         const fetchData = async () => {
             const favResults = (await cloudStorage.getItem(
@@ -132,8 +150,11 @@ function Profile() {
                 setBoomarks(JSON.parse(bookmarkResults["bookmarks"]));
             if (recentResults && recentResults["recents"] != "")
                 setRecent(JSON.parse(recentResults["recents"]));
+
+            setLoadingDetails(false);
         };
 
+        setLoadingDetails(true);
         fetchData();
     }, []);
 
@@ -164,12 +185,14 @@ function Profile() {
         );
     }
 
+    console.log("recents", recent);
+
     return (
         <Page>
             <div
                 className="p-3 text-white lg:max-w-[700px] mx-auto relative"
                 style={{
-                    marginTop: unavailable ? 0 : top,
+                    marginTop: showAlert ? 0 : top,
                 }}
             >
                 <div className="flex gap-4 items-center mt-2">
@@ -229,132 +252,167 @@ function Profile() {
                     </div>
                 </div>
 
-                <div
-                    className="mt-5 flex flex-col gap-6"
-                    style={{
-                        paddingBottom: bottom,
-                    }}
-                >
-                    <div className="w-full">
-                        <h2 className="text-2xl font-bold mb-4">
-                            🕒 Historique{" "}
-                        </h2>
-                        <div className=" flex gap-2 w-full overflow-x-auto no-scrollbar">
-                            {recent.length == 0 ? (
-                                <p className="text-xs w-full text-center text-slate-500">
-                                    Nothing yet
-                                </p>
-                            ) : (
-                                recent.map((item, index) => (
-                                    <div
-                                        onClick={() => handleRead(item)}
-                                        key={index}
-                                        className={`flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer  ${
-                                            hideIds?.includes(
-                                                `recents_${item.scanId!}`
-                                            )
-                                                ? "hidden"
-                                                : ""
-                                        }`}
-                                    >
-                                        <div className="w-full h-40 relative">
-                                            <LazyLoadImage
-                                                src={item.imgUrl}
-                                                className="w-full h-full object-cover"
-                                                alt="img"
-                                                // placeholder={<img src="./loader.gif" />}
-                                                placeholder={
-                                                    <div className="w-full h-full bg-slate-400 animate-pulse" />
-                                                }
-                                            />
-                                            <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
+                {!loadingDetails && (
+                    <div
+                        className="mt-5 flex flex-col gap-6"
+                        style={{
+                            paddingBottom: bottom,
+                        }}
+                    >
+                        {!!recent.length && (
+                            <div className="w-full">
+                                <h2 className="text-2xl font-bold mb-4">
+                                    🕒 Historique{" "}
+                                </h2>
+                                <div className=" flex gap-2 w-full overflow-x-auto no-scrollbar">
+                                    {recent.length == 0 ? (
+                                        <p className="text-xs w-full text-center text-slate-500">
+                                            Nothing yet
+                                        </p>
+                                    ) : (
+                                        recent.map((item, index) => (
                                             <div
-                                                className="absolute top-2 right-2 z-20 hover:text-red-700"
-                                                onClick={async (e) => {
-                                                    e.stopPropagation();
-
-                                                    await handleDelete(
-                                                        item.title!,
-                                                        "recents",
-                                                        item.scanId!
-                                                    );
-                                                }}
+                                                onClick={() => handleRead(item)}
+                                                key={index}
+                                                className={`flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer  ${
+                                                    hideIds?.includes(
+                                                        `recents_${item.scanId!}`
+                                                    )
+                                                        ? "hidden"
+                                                        : ""
+                                                }`}
                                             >
-                                                <IoIosTrash size={20} />
+                                                <div className="w-full h-40 relative">
+                                                    <LazyLoadImage
+                                                        src={item.imgUrl}
+                                                        className="w-full h-full object-cover"
+                                                        alt="img"
+                                                        // placeholder={<img src="./loader.gif" />}
+                                                        placeholder={
+                                                            <div className="w-full h-full bg-slate-400 animate-pulse" />
+                                                        }
+                                                    />
+                                                    <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
+                                                    <div
+                                                        className="absolute top-2 right-2 z-20 hover:text-red-700"
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+
+                                                            await handleDelete(
+                                                                item.title!,
+                                                                "recents",
+                                                                item.scanId!
+                                                            );
+                                                        }}
+                                                    >
+                                                        <IoIosTrash size={20} />
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <p className="text-xs truncate capitalize">
+                                                        {item.title}
+                                                    </p>
+                                                    <p className="text-[0.6rem] truncate text-slate-400">
+                                                        CH{" "}
+                                                        {item?.chapName ||
+                                                            item.chap}
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <p className="text-xs truncate capitalize">
-                                                {item.title}
-                                            </p>
-                                            <p className="text-[0.6rem] truncate text-slate-400">
-                                                CH {item?.chapName || item.chap}
-                                            </p>
-                                        </div>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
-                    <div className="w-full">
-                        <h2 className="text-2xl font-bold mb-4">
-                            <span className="text-red-600">❤</span> Favoris
-                        </h2>
-                        <div className="w-full flex gap-2 overflow-x-auto no-scrollbar">
-                            {favourites.length == 0 ? (
-                                <p className="text-xs w-full text-center text-slate-500">
-                                    A list of favourite scan
-                                </p>
-                            ) : (
-                                favourites.map((item) => (
-                                    <Card
-                                        key={item.scanId}
-                                        id={item.scanId!}
-                                        subId=""
-                                        imgUrl={item.imgUrl!}
-                                        title={item.title!}
-                                        stars={item.stars || "N/A"}
-                                        helpPath="../"
-                                        isProfile={true}
-                                        type="favourites"
-                                        hideIds={hideIds}
-                                        setHideIds={setHideIds}
-                                    />
-                                ))
-                            )}
-                        </div>
-                    </div>
+                        {!!favourites.length && (
+                            <div className="w-full">
+                                <h2 className="text-2xl font-bold mb-4">
+                                    <span className="text-red-600">❤</span>{" "}
+                                    Favoris
+                                </h2>
+                                <div className="w-full flex gap-2 overflow-x-auto no-scrollbar">
+                                    {favourites.length == 0 ? (
+                                        <p className="text-xs w-full text-center text-slate-500">
+                                            A list of favourite scan
+                                        </p>
+                                    ) : (
+                                        favourites.map((item) => (
+                                            <Card
+                                                key={item.scanId}
+                                                id={item.scanId!}
+                                                parentId={
+                                                    item.scanParentId || ""
+                                                }
+                                                imgUrl={item.imgUrl!}
+                                                title={item.title!}
+                                                stars={item.stars || "N/A"}
+                                                helpPath="../"
+                                                isProfile={true}
+                                                type="favourites"
+                                                hideIds={hideIds}
+                                                setHideIds={setHideIds}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
 
-                    <div className="w-full">
-                        <h2 className="text-2xl font-bold mb-4 flex items-center">
-                            📺 Watchlist
-                        </h2>
-                        <div className="flex w-full gap-2 overflow-x-auto no-scrollbar">
-                            {bookmarks.length == 0 ? (
-                                <p className="text-xs w-full text-center text-slate-500">
-                                    Add scan to read later
-                                </p>
-                            ) : (
-                                bookmarks.map((item) => (
-                                    <Card
-                                        key={item.scanId}
-                                        id={item.scanId!}
-                                        imgUrl={item.imgUrl!}
-                                        title={item.title!}
-                                        subId=""
-                                        stars={item.stars || "N/A"}
-                                        helpPath="../"
-                                        isProfile={true}
-                                        type="bookmarks"
-                                        hideIds={hideIds}
-                                        setHideIds={setHideIds}
-                                    />
-                                ))
+                        {!!bookmarks.length && (
+                            <div className="w-full">
+                                <h2 className="text-2xl font-bold mb-4 flex items-center">
+                                    📺 Watchlist
+                                </h2>
+                                <div className="flex w-full gap-2 overflow-x-auto no-scrollbar">
+                                    {bookmarks.length == 0 ? (
+                                        <p className="text-xs w-full text-center text-slate-500">
+                                            Add scan to read later
+                                        </p>
+                                    ) : (
+                                        bookmarks.map((item) => (
+                                            <Card
+                                                key={item.scanId}
+                                                id={item.scanId!}
+                                                imgUrl={item.imgUrl!}
+                                                title={item.title!}
+                                                parentId={
+                                                    item.scanParentId || ""
+                                                }
+                                                stars={item.stars || "N/A"}
+                                                helpPath="../"
+                                                isProfile={true}
+                                                type="bookmarks"
+                                                hideIds={hideIds}
+                                                setHideIds={setHideIds}
+                                            />
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {!recent.length &&
+                            !favourites.length &&
+                            !bookmarks.length && (
+                                <div>
+                                    <p className="text-xs w-full text-center text-slate-500">
+                                        Continuez à explorer l'application.
+                                        Votre contenu favori apparaîtra ici.
+                                    </p>
+                                </div>
                             )}
-                        </div>
                     </div>
-                </div>
+                )}
+
+                {loadingDetails && (
+                    <div className="flex flex-col justify-center items-center mt-5">
+                        <Loading />
+                        <p className="text-xs text-slate-400 mt-2">
+                            Chargement...
+                        </p>
+                    </div>
+                )}
             </div>
         </Page>
     );

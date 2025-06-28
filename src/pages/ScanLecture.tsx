@@ -17,6 +17,8 @@ import ScrollToTop from "../components/ScrollToTop";
 import VerticalSlider from "../components/VerticalSlider";
 import useLocalStorage from "../hooks/useLocalStorage";
 
+import LoaderGif from "../assets/loader.gif";
+
 type ImageType = {
     id: number;
     url: string;
@@ -26,6 +28,7 @@ function ScanLecture() {
     const param = useParams() as {
         id: string;
         chapter: string;
+        parentId?: string; // represent the actual id incase of a 2 path scan id
     };
     const location = useLocation();
 
@@ -86,7 +89,9 @@ function ScanLecture() {
     // }, []);
 
     const fetchChap = async () => {
-        const { data, status } = await api.get(`/?key=${param.id}`);
+        const { data, status } = await api.get(
+            `/?key=${param.id}&parentId=${param.parentId || ""}`
+        );
 
         if (status != 200) {
             throw new Error("Network response was not ok");
@@ -187,6 +192,7 @@ function ScanLecture() {
                 chap: selectedChap,
                 chapName: chapName || "",
                 scanId: state.data.scanId,
+                scanParentId: state.data.scanParentId,
                 scanPath: state.data.scanPath,
             };
 
@@ -336,7 +342,7 @@ function ScanLecture() {
                     setSelectedChap={setSelectedChap}
                     selectedChapName={chapterName?.toString() || ""}
                     selectedChap={selectedChap}
-                    scanID={param.id}
+                    scanID={param.parentId || param.id}
                     showControls={showControls}
                     title={state.data.title}
                     setShowLightConfig={setShowLightConfig}
@@ -379,7 +385,7 @@ function ScanLecture() {
                                         placeholder={
                                             <div className="flex justify-center items-center">
                                                 <img
-                                                    src="loader.gif"
+                                                    src={LoaderGif}
                                                     className="w-10 h-10"
                                                 />
                                             </div>

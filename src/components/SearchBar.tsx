@@ -35,6 +35,12 @@ function SearchBar({ search, handleSearch, setSearch }: SearchBarProps) {
                 </div>
             </div>
 
+            {/* {search && (
+                <div className="cursor-pointer">
+                    <p className="text-slate-400 text-xs">Annuler</p>
+                </div>
+            )} */}
+
             {!search && (
                 <div className="max-w-10 max-h-10 min-w-10 min-h-10 flex justify-center rounded-full">
                     <Avatar />

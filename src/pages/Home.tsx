@@ -22,7 +22,7 @@ function Home() {
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
     const { top, bottom } = useSafeArea();
-    const { unavailable } = useAlert();
+    const { showAlert } = useAlert();
 
     const debouncedSearch = debounce((query) => {
         setDebouncedSearchTerm(query);
@@ -101,7 +101,7 @@ function Home() {
             <section
                 className="relative lg:max-w-[700px] mx-auto"
                 style={{
-                    marginTop: unavailable ? 0 : top,
+                    marginTop: showAlert ? 0 : top,
                     marginBottom: bottom,
                 }}
             >

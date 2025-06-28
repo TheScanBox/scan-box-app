@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ScanResponse } from "../App";
 
 function Banner({ data }: { data: ScanResponse[] }) {
-    const [index, setIndex] = useState(1);
+    const [index, setIndex] = useState(0);
 
     const updateIndex = () => {
         setIndex((prevIndex) => {
@@ -45,11 +45,6 @@ function Banner({ data }: { data: ScanResponse[] }) {
                     backgroundImage: `url(${data[index].imgUrl})`,
                 }}
             />
-            {/* <img
-                src={data[index].imgUrl}
-                alt={data[index].title}
-                className="h-full w-full object-cover rounded-lg"
-            /> */}
 
             <div className="absolute bottom-0 p-2 text-white w-full flex gap-2 justify-between items-center bg-black/50 rounded-b-lg">
                 <div className="w-3/4">
@@ -61,7 +56,7 @@ function Banner({ data }: { data: ScanResponse[] }) {
                 <div className="flex flex-1 justify-center items-center w-1/4">
                     <Link
                         className="p-2 rounded-full bg-blue-500 w-full text-center"
-                        to={`/details/${data[index].scanId}/${data[index].scanSubId}`}
+                        to={`/details/${data[index].scanId}/${data[index].scanParentId}`}
                     >
                         Lire
                     </Link>

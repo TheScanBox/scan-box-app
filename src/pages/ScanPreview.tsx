@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ScanResponse } from "../App";
 import {
@@ -18,8 +18,15 @@ import {
     cloudStorage,
     exitFullscreen,
     mountViewport,
+    retrieveLaunchParams,
 } from "@telegram-apps/sdk-react";
-import { IoShareSocial } from "react-icons/io5";
+import {
+    IoShareSocial,
+    IoStarOutline,
+    IoNotificationsOff,
+} from "react-icons/io5";
+import { GoAlert } from "react-icons/go";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import { Tag, ChapterItem } from "../components";
 import { useQuery } from "@tanstack/react-query";
 import { Page } from "../components/Page";
@@ -28,6 +35,11 @@ import api from "../libs/api";
 import useSafeArea from "../hooks/useSafeArea";
 import ScanListHeader from "../components/ScanListHeader";
 import { useAlert } from "../context/AlertContext";
+import { createPortal } from "react-dom";
+import LoaderGif from "../assets/loader.gif";
+import StarRating from "../components/StarRating";
+import { debounce } from "lodash";
+import useRating from "../hooks/useRating";
 
 export type FavBookType = {
     img: string;
@@ -53,6 +65,13 @@ function ScanPreview() {
     const param = useParams();
     const navigate = useNavigate();
 
+    const buttonRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [open, setOpen] = useState(false);
+    const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+    const [openRatings, setOpenRatings] = useState(false);
+    const [initialRating, setInitialRating] = useState(0);
+
     const [numChap, setNumChap] = useState(0);
     const [totalPage, setTotalPage] = useState(0);
     const [savedChap, setSavedChap] = useState<number | null>(null);
@@ -67,8 +86,15 @@ function ScanPreview() {
     >([]);
     const [noData, setNoData] = useState(false);
 
+    const { tgWebAppData } = retrieveLaunchParams();
+    const user = tgWebAppData?.user;
+
     const { top, bottom } = useSafeArea();
-    const { unavailable } = useAlert();
+    const { loading: ratingLoading, rating } = useRating(
+        user?.id.toString()!,
+        param.id!
+    );
+    const { showAlert } = useAlert();
 
     const fetchData = async () => {
         const { data, status } = await api.get(`/scan?scanID=${param.id}`);
@@ -82,7 +108,7 @@ function ScanPreview() {
 
     const fetchChap = async () => {
         const { data, status } = await api.get(
-            `/?key=${param.id}&subId=${param.subid || ""}`
+            `/?key=${param.id}&parentId=${param.parentId || ""}`
         );
 
         if (status != 200) {
@@ -93,7 +119,7 @@ function ScanPreview() {
     };
 
     const { data, error, isLoading } = useQuery<ScanResponse>({
-        queryKey: [`scan_${param.id}_${param.subid}`],
+        queryKey: [`scan_${param.id}_${param.parentId}`],
         queryFn: fetchData,
         staleTime: 600000,
     });
@@ -197,24 +223,55 @@ function ScanPreview() {
         fetchData();
     }, [data]);
 
-    // useEffect(() => {
-    //     const resetData = async () => {
-    //         await cloudStorage.setItem("favourites", "");
-    //         await cloudStorage.setItem("bookmarks", "");
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+            const target = e.target as Node;
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(target) &&
+                buttonRef.current &&
+                !buttonRef.current.contains(target)
+            ) {
+                setOpen(false);
+            }
+        };
 
-    //         console.log("Reset");
-    //     };
+        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener("touchstart", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            document.removeEventListener("touchstart", handleClickOutside);
+        };
+    }, []);
 
-    //     resetData();
-    // }, []);
+    const handleToggleMenu = () => {
+        if (!open && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+
+            setMenuPos({
+                top: rect.bottom + 5,
+                right: rect.right - rect.left + 5,
+            });
+        }
+
+        setOpen((prev) => !prev);
+    };
 
     const handleRead = (chapterNum: number) => {
-        navigate(`/read/${param.id}/${chapterNum}`, {
+        // const path = param.parentId
+        //     ? `/read/${param.parentId}/${chapterNum}/${param.id}`
+        //     : `/read/${param.id}/${chapterNum}`;
+        const path = param.parentId
+            ? `/read/${param.id}/${chapterNum}/${param.parentId}`
+            : `/read/${param.id}/${chapterNum}`;
+
+        navigate(path, {
             state: {
                 data: {
                     imgUrl: data?.imgUrl,
                     title: data?.title,
                     scanId: data?.scanId,
+                    scanParentId: data?.scanParentId,
                     scanPath: data?.scanPath,
                 },
                 chapData,
@@ -237,6 +294,7 @@ function ScanPreview() {
                 imgUrl: data?.imgUrl,
                 title: data?.title,
                 scanId: data?.scanId,
+                scanParentId: data?.scanParentId,
                 stars: data?.stars,
             };
 
@@ -293,6 +351,47 @@ function ScanPreview() {
         );
     };
 
+    const handleRating = () => {
+        setOpenRatings((prev) => !prev);
+        setOpen(false);
+    };
+
+    const submitRating = debounce(async (rating: number) => {
+        try {
+            const { status } = await api.post("/rating", {
+                scanId: param.id,
+                userId: user?.id.toString(),
+                value: rating.toFixed(1),
+            });
+
+            if (status !== 200) {
+                return;
+            }
+
+            setInitialRating(rating);
+        } catch (error) {
+            console.error(error);
+        }
+    }, 800);
+
+    const handleRatingUpdate = async (rate: number) => {
+        submitRating(rate);
+    };
+
+    const handleAlert = () => {
+        openTelegramLink(
+            `https://t.me/TheScanBoxSupportBot?start=alert_${param.id}`
+        );
+
+        setOpen(false);
+    };
+
+    const handleSubscribe = () => {
+        alert("Bientôt disponible...");
+
+        setOpen(false);
+    };
+
     if ((!data || !data.id || error) && !isLoading) {
         return (
             <Page>
@@ -315,7 +414,7 @@ function ScanPreview() {
                 <div
                     className="p-3 space-y-4 animate-pulse w-full lg:max-w-[700px] mx-auto"
                     style={{
-                        marginTop: unavailable ? 0 : top,
+                        marginTop: showAlert ? 0 : top,
                     }}
                 >
                     <div className="w-full h-56 flex gap-4">
@@ -380,7 +479,7 @@ function ScanPreview() {
             <div
                 className="p-3 space-y-4 relative h-screen flex flex-col lg:max-w-[700px] mx-auto select-none"
                 style={{
-                    marginTop: unavailable ? 0 : top,
+                    marginTop: showAlert ? 0 : top,
                 }}
             >
                 <div className="w-full min-h-56 flex gap-2">
@@ -391,15 +490,7 @@ function ScanPreview() {
                         }}
                     />
 
-                    <div>
-                        {/* <img
-                        src={`${data?.imgUrl}`}
-                        alt="1"
-                        className="h-full w-2/5 object-cover"
-                    /> */}
-                    </div>
-
-                    <div className="space-y-3 w-full overflow-hidden">
+                    <div className="space-y-3 w-full overflow-x-hidden overflow-y-visible">
                         <div className="w-full">
                             <h2 className="text-lg text-white font-bold break-words capitalize">
                                 {data?.title}
@@ -446,13 +537,79 @@ function ScanPreview() {
                             </button>
                             <button
                                 onClick={handleShare}
-                                className={`p-2 flex rounded-md bg-white text-slate-700"}`}
+                                className={`p-2 flex rounded-md bg-white text-slate-700`}
                             >
                                 <IoShareSocial size={24} />
                             </button>
+
+                            <button
+                                ref={buttonRef}
+                                onClick={handleToggleMenu}
+                                className={`-ml-1.5 flex rounded-md text-slate-200`}
+                            >
+                                <BsThreeDotsVertical size={26} />
+                            </button>
                         </div>
+
+                        {openRatings && (
+                            <div>
+                                <StarRating
+                                    initial={initialRating || rating}
+                                    onRate={handleRatingUpdate}
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
+
+                {open &&
+                    createPortal(
+                        <div
+                            ref={menuRef}
+                            style={{
+                                top: `${menuPos.top}px`,
+                                right: `${menuPos.right}px`,
+                            }}
+                            className="text-white text-sm bg-slate-700 absolute mt-4 w-36 rounded-md shadow-xl z-50"
+                        >
+                            <ul className="divide-y-[0.5px] divide-gray-500">
+                                <li
+                                    onClick={handleRating}
+                                    className="px-3 py-2 flex gap-1.5 truncate items-center hover:bg-gray-500 cursor-pointer rounded-t-md"
+                                >
+                                    <span className="text-yellow-400">
+                                        <IoStarOutline size={17} />
+                                    </span>
+                                    Notez {ratingLoading && "(?)"}
+                                    {!ratingLoading &&
+                                        (initialRating == 0
+                                            ? rating > 0
+                                                ? `(${rating.toFixed(1)})`
+                                                : ""
+                                            : `(${initialRating.toFixed(1)})`)}
+                                </li>
+                                <li
+                                    onClick={handleSubscribe}
+                                    className="px-3 py-2 flex gap-1.5 truncate items-center hover:bg-gray-500 cursor-pointer"
+                                >
+                                    <span>
+                                        <IoNotificationsOff size={17} />
+                                    </span>
+                                    Subscription
+                                </li>
+                                <li
+                                    onClick={handleAlert}
+                                    className="px-3 text-red-600 py-2 flex gap-1.5 truncate items-center hover:bg-gray-500 cursor-pointer rounded-b-md"
+                                >
+                                    <span>
+                                        <GoAlert size={17} />
+                                    </span>
+                                    Signalé
+                                </li>
+                            </ul>
+                        </div>,
+                        document.body
+                    )}
 
                 <div className="space-y-4">
                     <div className="text-white">
@@ -489,14 +646,15 @@ function ScanPreview() {
                     ))}
                 </div>
 
-                {(chapLoading || chapFetching) && (
+                {(chapLoading || chapFetching) && !chapData && (
                     <div
                         className="flex flex-col justify-center items-center mt-14"
                         style={{
                             paddingBottom: bottom,
                         }}
                     >
-                        <Loading />
+                        {/* <Loading /> */}
+                        <img src={LoaderGif} className="w-9 h-9" />
                         <p className="text-xs text-slate-400 mt-2">
                             Chargement...
                         </p>

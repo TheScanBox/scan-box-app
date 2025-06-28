@@ -6,13 +6,13 @@ import { useAlert } from "../context/AlertContext";
 
 function HomeLoading() {
     const { top } = useSafeArea();
-    const { unavailable } = useAlert();
+    const { showAlert } = useAlert();
 
     return (
         <section
             className="relative"
             style={{
-                marginTop: unavailable ? 0 : top,
+                marginTop: showAlert ? 0 : top,
             }}
         >
             <div className="p-3 pb-8">

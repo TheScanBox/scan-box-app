@@ -18,7 +18,7 @@ export type ResultItem = {
 
 type CardProps = {
     id: string;
-    subId: string;
+    parentId: string;
     imgUrl: string;
     title: string;
     stars: number | string;
@@ -35,7 +35,7 @@ function Card({
     title,
     stars,
     id,
-    subId,
+    parentId,
     helpPath,
     isMore = false,
     isProfile,
@@ -92,7 +92,9 @@ function Card({
                 isMore ? "w-full flex-1" : "min-w-32 w-32"
             } ${hideIds?.includes(`${type}_${id}`) ? "hidden" : ""}`}
             onClick={() =>
-                navigate(`${helpPath ? helpPath : ""}../details/${id}/${subId}`)
+                navigate(
+                    `${helpPath ? helpPath : ""}../details/${id}/${parentId}`
+                )
             }
         >
             {/* <div

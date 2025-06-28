@@ -44,7 +44,7 @@ const Auth = () => {
     const hasMounted = useRef(false);
     const queryClient = useQueryClient();
 
-    const { setUnAvailable } = useAlert();
+    const { setShowAlert } = useAlert();
 
     const [index, setIndex] = useState(0);
 
@@ -124,8 +124,6 @@ const Auth = () => {
             if (command == "read") {
                 if (chap) {
                     try {
-                        console.log(payload);
-
                         const { data, status } = await api.get(
                             `/scan?scanID=${payload}`
                         );
@@ -136,13 +134,18 @@ const Auth = () => {
 
                         queryClient.setQueryData([`scan_${payload}`], data);
 
-                        navigate(`/read/${payload}/${chap}`, {
+                        const path = data.scanParentId
+                            ? `/read/${payload}/${chap}/${data.scanParentId}`
+                            : `/read/${payload}/${chap}`;
+
+                        navigate(path, {
                             state: {
                                 data: {
                                     imgUrl: data.imgUrl,
                                     title: data.title,
                                     scanId: data.scanId,
                                     scanPath: data.scanPath,
+                                    scanParentId: data?.scanParentId,
                                 },
                             },
                             replace: true,
@@ -158,7 +161,21 @@ const Auth = () => {
                     return;
                 }
 
-                navigate(`/details/${payload}`, {
+                let parentId = "";
+
+                if (payload.toLowerCase().startsWith("scan")) {
+                    const { data, status } = await api.get(
+                        `/scan?scanID=${payload}`
+                    );
+
+                    if (status != 200) {
+                        throw new Error("Network response was not ok");
+                    }
+
+                    parentId = data.scanParentId || "";
+                }
+
+                navigate(`/details/${payload}/${parentId}`, {
                     replace: true,
                 });
 
@@ -210,7 +227,7 @@ const Auth = () => {
                 await mount();
                 await auth();
 
-                // setUnAvailable(true);
+                // setShowAlert(true);
             }
 
             if (bindMiniAppCssVars.isAvailable()) {
