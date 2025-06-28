@@ -731,16 +731,18 @@ function ScanPreview() {
                                       ))}
                         </div>
 
-                        <button
-                            onClick={() => handleRead(savedChap ?? 1)}
-                            className="flex items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
-                            style={{
-                                bottom: `calc(${bottom}px + 3.5rem)`,
-                            }}
-                        >
-                            <IoMdArrowDropright size={20} />
-                            {savedChap ? "Continue" : "Start"}
-                        </button>
+                        {!isObjectEmpty(chapData) && (
+                            <button
+                                onClick={() => handleRead(savedChap ?? 1)}
+                                className="flex items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
+                                style={{
+                                    bottom: `calc(${bottom}px + 3.5rem)`,
+                                }}
+                            >
+                                <IoMdArrowDropright size={20} />
+                                {savedChap ? "Continue" : "Start"}
+                            </button>
+                        )}
 
                         <div
                             className="flex items-center pb-4 gap-3 justify-center w-full"

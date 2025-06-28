@@ -301,7 +301,7 @@ function ScanLecture() {
         error ||
         loadError ||
         specialChaptersError ||
-        (!state.chapData && isObjectEmpty(chapData))
+        isObjectEmpty(state?.chapData || chapData)
     ) {
         return (
             <Page>
