@@ -2,6 +2,7 @@ import ScanLectureControls from "../components/ScanLectureControls";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { LazyLoadImage } from "react-lazy-load-image-component";
+import "react-lazy-load-image-component/src/effects/blur.css";
 import { ScanResponse } from "../App";
 import ScanLectureControlsBottom from "../components/ScanLectureControlsBottom";
 import { cloudStorage } from "@telegram-apps/sdk-react";
@@ -382,6 +383,11 @@ function ScanLecture() {
                                         key={index}
                                         src={imageUrl}
                                         alt={`Page ${image.id}`}
+                                        visibleByDefault={
+                                            index == 0 ? true : false
+                                        }
+                                        // placeholderSrc=""
+                                        effect="blur"
                                         placeholder={
                                             <div className="flex justify-center items-center">
                                                 <img
