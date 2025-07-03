@@ -8,6 +8,7 @@ import NotAllowed from "./pages/NotAllowed";
 import { NotFound, Profile } from "./components";
 import useHeartbeat from "./hooks/useHeartbeat";
 import AlertMessage from "./components/AlertMessage";
+import Comments from "./pages/Comments";
 
 type StringData = {
     name: string;
@@ -69,6 +70,7 @@ function App() {
                     path="read/:id/:chapter/:parentId?"
                     element={<ScanLecture />}
                 />
+                <Route path="comments/:id" element={<Comments />} />
                 {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
                 <Route path="*" element={<NotFound />} />
             </Routes>

@@ -1,18 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ScanResponse } from "../App";
-import {
-    AiFillEye,
-    AiFillHeart,
-    AiFillStar,
-    AiOutlineDown,
-} from "react-icons/ai";
+import { AiFillEye, AiFillHeart, AiFillStar } from "react-icons/ai";
 import { CiBookmark } from "react-icons/ci";
 import {
     IoMdArrowDropright,
     IoIosArrowForward,
     IoIosArrowBack,
 } from "react-icons/io";
+import { BiCommentDetail } from "react-icons/bi";
 import {
     openTelegramLink,
     cloudStorage,
@@ -27,10 +22,10 @@ import {
 } from "react-icons/io5";
 import { GoAlert } from "react-icons/go";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { ScanResponse } from "../App";
 import { Tag, ChapterItem } from "../components";
 import { useQuery } from "@tanstack/react-query";
 import { Page } from "../components/Page";
-import Loading from "../components/Loading";
 import api from "../libs/api";
 import useSafeArea from "../hooks/useSafeArea";
 import ScanListHeader from "../components/ScanListHeader";
@@ -482,7 +477,7 @@ function ScanPreview() {
                     marginTop: showAlert ? 0 : top,
                 }}
             >
-                <div className="w-full min-h-56 flex gap-2">
+                <div className="w-full min-h-56 flex gap-2.5">
                     <div
                         className="h-full w-3/4 min-w-32 max-w-[150px] bg-cover bg-center"
                         style={{
@@ -596,6 +591,12 @@ function ScanPreview() {
                                         <IoNotificationsOff size={17} />
                                     </span>
                                     Subscription
+                                </li>
+                                <li className="px-3 py-2 hidden gap-1.5 truncate items-center hover:bg-gray-500 cursor-pointer">
+                                    <span>
+                                        <BiCommentDetail size={17} />
+                                    </span>
+                                    Comment... {`(?)`}
                                 </li>
                                 <li
                                     onClick={handleAlert}

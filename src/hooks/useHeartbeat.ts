@@ -8,7 +8,9 @@ const useHeartbeat = (userId: string, intervalMs: number) => {
     const hasStarted = useRef(false);
 
     useEffect(() => {
+        if (import.meta.env.VITE_APP_ENV == "development") return;
         if (hasStarted.current) return;
+
         hasStarted.current = true;
 
         const sendHeartbeat = async () => {

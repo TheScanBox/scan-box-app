@@ -21,7 +21,7 @@ type CardProps = {
     parentId: string;
     imgUrl: string;
     title: string;
-    stars: number | string;
+    stars?: number | string;
     helpPath?: string;
     isMore?: boolean;
     isProfile?: boolean;
@@ -128,7 +128,9 @@ function Card({
                 <div className="flex justify-between items-center">
                     <div className="flex gap-1 items-center">
                         <CiStar color="yellow" />
-                        <p>{stars}</p>
+                        <p>
+                            {stars ? parseFloat(`${stars}`)?.toFixed(1) : "N/A"}
+                        </p>
                     </div>
                 </div>
             </div>

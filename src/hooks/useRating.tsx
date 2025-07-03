@@ -13,7 +13,7 @@ const useRating = (userId: string, scanId: string) => {
                     `/rating?userId=${userId}&scanId=${scanId}`
                 );
 
-                setRating(data?.rating.value);
+                setRating(data?.rating?.value);
             } catch (error) {
                 console.log(error);
                 setError(true);

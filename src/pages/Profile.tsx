@@ -185,8 +185,6 @@ function Profile() {
         );
     }
 
-    console.log("recents", recent);
-
     return (
         <Page>
             <div
@@ -346,7 +344,7 @@ function Profile() {
                                                 }
                                                 imgUrl={item.imgUrl!}
                                                 title={item.title!}
-                                                stars={item.stars || "N/A"}
+                                                stars={item.stars}
                                                 helpPath="../"
                                                 isProfile={true}
                                                 type="favourites"
@@ -379,7 +377,7 @@ function Profile() {
                                                 parentId={
                                                     item.scanParentId || ""
                                                 }
-                                                stars={item.stars || "N/A"}
+                                                stars={item.stars}
                                                 helpPath="../"
                                                 isProfile={true}
                                                 type="bookmarks"

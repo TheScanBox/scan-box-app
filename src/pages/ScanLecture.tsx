@@ -1,8 +1,6 @@
 import ScanLectureControls from "../components/ScanLectureControls";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
-import { LazyLoadImage } from "react-lazy-load-image-component";
-import "react-lazy-load-image-component/src/effects/blur.css";
 import { ScanResponse } from "../App";
 import ScanLectureControlsBottom from "../components/ScanLectureControlsBottom";
 import { cloudStorage } from "@telegram-apps/sdk-react";
@@ -13,12 +11,11 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import ProgressBar from "../components/ProgressBar";
 import { capitalize, isObjectEmpty } from "./ScanPreview";
-import { useAlert } from "../context/AlertContext";
-import ScrollToTop from "../components/ScrollToTop";
 import VerticalSlider from "../components/VerticalSlider";
 import useLocalStorage from "../hooks/useLocalStorage";
 
-import LoaderGif from "../assets/loader.gif";
+import ScanLoader from "../components/ScanLoader";
+import useFetchImages from "../hooks/useFetchImages";
 
 type ImageType = {
     id: number;
@@ -33,12 +30,10 @@ function ScanLecture() {
     };
     const location = useLocation();
 
-    const [pageUrls, setPageUrls] = useState<ImageType[]>([]);
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
     const [showControls, setShowControls] = useState(true);
     const [scrollProgress, setScrollProgress] = useState(0);
-    const [chapterName, setChapterName] = useState<number>();
+
     const [notFound, setNotFound] = useState(false);
     const [allChapters, setAllChapters] =
         useState<{ [index: string]: number }[]>();
@@ -49,10 +44,6 @@ function ScanLecture() {
     const [visible, setVisible] = useState(false);
     const [showLightConfig, setShowLightConfig] = useState(false);
     const [luminousity, setLiminousity] = useLocalStorage("luminousity", 100);
-
-    const [failedImages, setFailedImages] = useState<Record<string, number>>(
-        {}
-    );
 
     const {
         state,
@@ -111,42 +102,11 @@ function ScanLecture() {
         return data;
     };
 
-    const updateScrollProgress = (e: any) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const scrollTop = e.target.scrollTop!;
-        const scrollHeight = scrollRef?.current?.scrollHeight || 0;
-        const progress = (scrollTop / scrollHeight) * 100;
-
-        setScrollProgress(progress);
-        setVisible(scrollTop > 600);
-    };
-
     const handleScroll = () => {
-        scrollRef.current?.scrollTo({
+        document.documentElement.scrollTo({
             top: 0,
             behavior: "smooth",
         });
-    };
-
-    const handleError = (id: number) => {
-        setFailedImages((prev) => ({ ...prev, [id]: prev[id] ?? 0 }));
-    };
-
-    const handleLoad = (id: number) => {
-        setFailedImages((prev) => {
-            const updated = { ...prev };
-            delete updated[id];
-
-            return updated;
-        });
-    };
-
-    const handleRetry = (id: number) => {
-        setFailedImages((prev) => ({
-            ...prev,
-            [id]: (prev[id] ?? 0) + 1, // increment version to force reload
-        }));
     };
 
     const {
@@ -169,88 +129,34 @@ function ScanLecture() {
         enabled: !state?.allChapters,
     });
 
+    const { loading, images, chapterName } = useFetchImages({
+        state: state,
+        id: param.id,
+        allChapters: allChapters!,
+        chapData: chapData,
+        selectedChap: selectedChap,
+    });
+
     useEffect(() => {
-        if (!state.allChapters && !allChapters) return;
-        let all = state?.allChapters ? state?.allChapters : allChapters;
+        const updateScrollProgress = (e: any) => {
+            e.preventDefault();
+            e.stopPropagation();
 
-        if (!all) return;
+            const scrollHeight = document.documentElement.scrollHeight;
+            const scrollTop =
+                document.documentElement.scrollTop || window.scrollY || 0;
 
-        const [chapName] = Object.values(all[Number(selectedChap) - 1]);
+            const progress = (scrollTop / scrollHeight) * 100;
 
-        const updateData = async () => {
-            await cloudStorage.setItem(
-                `selectedChap-${param.id}`,
-                selectedChap
-            );
-
-            const result = (await cloudStorage.getItem(
-                "recents"
-            )) as unknown as { [index: string]: string };
-
-            const item = {
-                imgUrl: state.data?.imgUrl,
-                title: state.data?.title,
-                chap: selectedChap,
-                chapName: chapName || "",
-                scanId: state.data.scanId,
-                scanParentId: state.data.scanParentId,
-                scanPath: state.data.scanPath,
-            };
-
-            if (!result || result["recents"] == "") {
-                await cloudStorage.setItem("recents", JSON.stringify([item]));
-
-                return;
-            }
-
-            const recentsArr: Array<typeof item> = JSON.parse(
-                result["recents"]
-            );
-
-            const filteredRecents = recentsArr.filter(
-                (result) => result.scanId != item?.scanId
-            );
-
-            await cloudStorage.setItem(
-                "recents",
-                JSON.stringify([item, ...filteredRecents])
-            );
+            setScrollProgress(progress);
+            setVisible(scrollTop > 600);
         };
 
-        let pages: ImageType[] = [];
+        document.addEventListener("scroll", updateScrollProgress);
 
-        if (!param.id) return;
-
-        if (!state?.chapData && !chapData) return;
-
-        const newChapData = state?.chapData ? state?.chapData : chapData;
-
-        for (let i = 1; i <= newChapData?.[`eps${selectedChap}`]; i++) {
-            pages.push({
-                id: i,
-                url: `https://anime-sama.fr/s2/scans/${state.data.scanPath}/${selectedChap}/${i}.jpg`,
-            });
-        }
-
-        const firstImage = new Image();
-
-        firstImage.onload = function () {
-            setLoading(false);
-        };
-
-        firstImage.onerror = function () {
-            setLoading(false);
-            // setError(true);
-        };
-
-        firstImage.src = pages[0].url;
-
-        setPageUrls(pages);
-        setLoading(true);
-        setChapterName(chapName);
-
-        updateData();
-    }, [selectedChap, state.data, chapData, allChapters]);
+        return () =>
+            document.removeEventListener("scroll", updateScrollProgress);
+    }, []);
 
     useEffect(() => {
         if (state?.allChapters || !specialChapters) return;
@@ -335,98 +241,26 @@ function ScanLecture() {
         <Page>
             <section
                 ref={scrollRef}
-                onScroll={(e) => updateScrollProgress(e)}
-                className="relative h-screen image-gallery lg:max-w-[700px] mx-auto"
+                className="relative w-full lg:max-w-[700px] mx-auto"
             >
                 <ScanLectureControls
                     numChap={Object.keys(state?.chapData || chapData).length}
                     setSelectedChap={setSelectedChap}
                     selectedChapName={chapterName?.toString() || ""}
                     selectedChap={selectedChap}
-                    scanID={param.parentId || param.id}
+                    scanID={param.id}
                     showControls={showControls}
                     title={state.data.title}
                     setShowLightConfig={setShowLightConfig}
                 />
 
-                <div
-                    className="z-10 w-full h-full"
-                    // onClick={() => setShowControls((prev) => !prev)}
-                    onTouchStart={() => {
-                        setShowControls(false);
-                        setShowLightConfig(false);
-                    }}
-                    onClick={() => {
-                        setShowControls(false);
-                        setShowLightConfig(false);
-                    }}
-                    onDoubleClick={() => setShowControls(!showControls)}
-                >
-                    {loading ? (
-                        <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
-                            <Loading />
-                            <p className="text-xs text-slate-400 mt-4">
-                                Chargement des données...
-                            </p>
-                        </div>
-                    ) : (
-                        pageUrls.map((image, index) => {
-                            const version = failedImages[image.id] ?? 0;
-                            const imageUrl = `${image.url}${
-                                version > 0 ? `?v=${version}` : ""
-                            }`;
-
-                            return (
-                                <div className="relative" key={image.id}>
-                                    <LazyLoadImage
-                                        className="z-0 object-contain"
-                                        key={index}
-                                        src={imageUrl}
-                                        alt={`Page ${image.id}`}
-                                        visibleByDefault={
-                                            index == 0 ? true : false
-                                        }
-                                        // placeholderSrc=""
-                                        effect="blur"
-                                        placeholder={
-                                            <div className="flex justify-center items-center">
-                                                <img
-                                                    src={LoaderGif}
-                                                    className="w-10 h-10"
-                                                />
-                                            </div>
-                                        }
-                                        onError={() => handleError(image.id)}
-                                        onLoad={() => handleLoad(image.id)}
-                                    />
-                                    {!(image.id in failedImages) && (
-                                        <div
-                                            style={{
-                                                backgroundColor: `rgba(0, 0, 0, ${
-                                                    (90 - luminousity) / 100
-                                                })`,
-                                            }}
-                                            className="absolute top-0 right-0 left-0 bottom-0 z-10"
-                                        />
-                                    )}
-
-                                    {image.id in failedImages && (
-                                        <div className="flex justify-center">
-                                            <button
-                                                className="cursor-pointer mt-2 mb-2 text-white underline"
-                                                onClick={() =>
-                                                    handleRetry(image.id)
-                                                }
-                                            >
-                                                Retry
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })
-                    )}
-                </div>
+                <ScanLoader
+                    images={images}
+                    luminousity={luminousity}
+                    setShowControls={setShowControls}
+                    setShowLightConfig={setShowLightConfig}
+                    pageLoading={loading}
+                />
 
                 {showLightConfig && (
                     <VerticalSlider
@@ -437,7 +271,6 @@ function ScanLecture() {
                         onChange={(v) => setLiminousity(v)}
                     />
                 )}
-                {/* <ScrollToTop /> */}
 
                 <ProgressBar scrollProgress={scrollProgress} />
 

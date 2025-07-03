@@ -86,8 +86,14 @@ const Auth = () => {
         const initDataRaw = retrieveRawInitData();
         const user = tgWebAppData?.user;
 
-        const startParam = tgWebAppStartParam ? tgWebAppStartParam : "";
-        const [command, payload, chap] = startParam.split("_");
+        let startParam = tgWebAppStartParam ? tgWebAppStartParam : "";
+
+        const isSpecialPath = startParam.includes("scan_");
+        if (isSpecialPath) startParam = startParam.replace("scan_", "scan-");
+
+        let [command, payload, chap] = startParam.split("_");
+
+        if (isSpecialPath) payload = payload.replace("scan-", "scan_");
 
         try {
             const res = await axios.post(
@@ -204,7 +210,11 @@ const Auth = () => {
         const init = async () => {
             const { tgWebAppPlatform } = retrieveLaunchParams();
 
-            if (tgWebAppPlatform != "android" && tgWebAppPlatform != "ios") {
+            if (
+                tgWebAppPlatform != "android" &&
+                tgWebAppPlatform != "ios" &&
+                import.meta.env.VITE_APP_ENV != "development"
+            ) {
                 navigate("/not-allowed");
 
                 return;
