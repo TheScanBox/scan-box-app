@@ -1,14 +1,35 @@
 import { Route, Routes } from "react-router-dom";
 import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
-import { useEffect } from "react";
-
-import { ScanPreview, Home, ScanLecture, More, Auth, Tags } from "./pages";
+import React, { useEffect, Suspense } from "react";
 import NotAllowed from "./pages/NotAllowed";
 
-import { NotFound, Profile } from "./components";
+import { NotFound } from "./components";
 import useHeartbeat from "./hooks/useHeartbeat";
 import AlertMessage from "./components/AlertMessage";
 import Comments from "./pages/Comments";
+import PageLoading from "./components/PageLoading";
+
+const Home = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.Home }))
+);
+const Profile = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.Profile }))
+);
+const Auth = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.Auth }))
+);
+const Tags = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.Tags }))
+);
+const More = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.More }))
+);
+const ScanPreview = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.ScanPreview }))
+);
+const ScanLecture = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.ScanLecture }))
+);
 
 type StringData = {
     name: string;
@@ -55,25 +76,27 @@ function App() {
         <>
             <AlertMessage />
 
-            <Routes>
-                <Route path="/" element={<Auth />} />
-                <Route path="not-allowed" element={<NotAllowed />} />
-                <Route path="home" element={<Home />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="more/:id" element={<More />} />
-                <Route path="tags/:id" element={<Tags />} />
-                <Route
-                    path="details/:id/:parentId?"
-                    element={<ScanPreview />}
-                />
-                <Route
-                    path="read/:id/:chapter/:parentId?"
-                    element={<ScanLecture />}
-                />
-                <Route path="comments/:id" element={<Comments />} />
-                {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
-                <Route path="*" element={<NotFound />} />
-            </Routes>
+            <Suspense fallback={<PageLoading />}>
+                <Routes>
+                    <Route path="/" element={<Auth />} />
+                    <Route path="not-allowed" element={<NotAllowed />} />
+                    <Route path="home" element={<Home />} />
+                    <Route path="profile" element={<Profile />} />
+                    <Route path="more/:id" element={<More />} />
+                    <Route path="tags/:id" element={<Tags />} />
+                    <Route
+                        path="details/:id/:parentId?"
+                        element={<ScanPreview />}
+                    />
+                    <Route
+                        path="read/:id/:chapter/:parentId?"
+                        element={<ScanLecture />}
+                    />
+                    <Route path="comments/:id" element={<Comments />} />
+                    {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </Suspense>
         </>
     );
 }

@@ -176,7 +176,7 @@ const ScanLoader = ({
                 ))
             )}
 
-            {loading && (
+            {loading && !pageLoading && (
                 <div className="flex gap-2 py-3 flex-col justify-center items-center overflow-y-hidden">
                     <img
                         // src="https://cdn.statically.io/gh/Anime-Sama/IMG/img/autres/loading_scans.gif"
