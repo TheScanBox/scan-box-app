@@ -26,7 +26,7 @@ const Tags = () => {
         pageParam = 1,
     }: any): Promise<ScanResponse[]> => {
         const { data, status } = await api.get(
-            `/tag?id=${params.id}&page=${pageParam}`
+            `/tags?id=${params.id}&page=${pageParam}`
         );
 
         if (status != 200) {

@@ -92,7 +92,7 @@ function ScanPreview() {
     const { showAlert } = useAlert();
 
     const fetchData = async () => {
-        const { data, status } = await api.get(`/scan?scanID=${param.id}`);
+        const { data, status } = await api.get(`/scans/${param.id}`);
 
         if (status != 200) {
             throw new Error("Network response was not ok");
@@ -103,7 +103,7 @@ function ScanPreview() {
 
     const fetchChap = async () => {
         const { data, status } = await api.get(
-            `/?key=${param.id}&parentId=${param.parentId || ""}`
+            `/chapters?key=${param.id}&parentId=${param.parentId || ""}`
         );
 
         if (status != 200) {

@@ -97,7 +97,7 @@ const Auth = () => {
 
         try {
             const res = await axios.post(
-                `${import.meta.env.VITE_API_URL}/users`,
+                `${import.meta.env.VITE_API_URL}/auth`,
                 {
                     userId: user?.id,
                     inviterID: command == "ref" ? payload : "",
@@ -131,7 +131,7 @@ const Auth = () => {
                 if (chap) {
                     try {
                         const { data, status } = await api.get(
-                            `/scan?scanID=${payload}`
+                            `/scans/${payload}`
                         );
 
                         if (status != 200) {
@@ -170,9 +170,7 @@ const Auth = () => {
                 let parentId = "";
 
                 if (payload.toLowerCase().startsWith("scan")) {
-                    const { data, status } = await api.get(
-                        `/scan?scanID=${payload}`
-                    );
+                    const { data, status } = await api.get(`/scans/${payload}`);
 
                     if (status != 200) {
                         throw new Error("Network response was not ok");

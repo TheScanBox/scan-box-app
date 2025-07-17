@@ -50,7 +50,7 @@ function Profile() {
     const APP_URL = import.meta.env.VITE_APP_URL;
 
     const fetchUserInfo = async () => {
-        const { data, status } = await api.get(`/user?id=${user?.id}`);
+        const { data, status } = await api.get(`/users?id=${user?.id}`);
 
         if (status != 200) {
             throw new Error("Network response was not ok");

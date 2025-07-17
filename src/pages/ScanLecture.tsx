@@ -82,7 +82,7 @@ function ScanLecture() {
 
     const fetchChap = async () => {
         const { data, status } = await api.get(
-            `/?key=${param.id}&parentId=${param.parentId || ""}`
+            `/chapters?key=${param.id}&parentId=${param.parentId || ""}`
         );
 
         if (status != 200) {
