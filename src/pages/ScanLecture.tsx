@@ -3,12 +3,10 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { ScanResponse } from "../App";
 import ScanLectureControlsBottom from "../components/ScanLectureControlsBottom";
-import { cloudStorage } from "@telegram-apps/sdk-react";
 
 import { Page } from "../components/Page";
 import Loading from "../components/Loading";
-import { useQuery } from "@tanstack/react-query";
-import api from "../libs/api";
+
 import ProgressBar from "../components/ProgressBar";
 import { capitalize, isObjectEmpty } from "./ScanPreview";
 import VerticalSlider from "../components/VerticalSlider";
@@ -16,17 +14,20 @@ import useLocalStorage from "../hooks/useLocalStorage";
 
 import ScanLoader from "../components/ScanLoader";
 import useFetchImages from "../hooks/useFetchImages";
+import useFetchSpecialChapters from "@/hooks/useFetchSpecialChapters";
+import useFetchChapters from "@/hooks/useFetchChapters";
 
-type ImageType = {
-    id: number;
-    url: string;
-};
+export type StateType = {
+    chapData: { [index: string]: number } | undefined;
+    data: ScanResponse & { chap?: string };
+    allChapters: { [index: string]: number }[];
+}
 
 function ScanLecture() {
     const param = useParams() as {
         id: string;
         chapter: string;
-        parentId?: string; // represent the actual id incase of a 2 path scan id
+        parentId?: string;
     };
     const location = useLocation();
 
@@ -48,17 +49,12 @@ function ScanLecture() {
     const {
         state,
     }: {
-        state: {
-            chapData: { [index: string]: number } | undefined;
-            data: ScanResponse & { chap?: string };
-            allChapters: { [index: string]: number }[];
-        };
+        state: StateType;
     } = useLocation();
 
     const [selectedChap, setSelectedChap] = useState(
         param.chapter || state?.data?.chap || "1"
     );
-
     // useEffect(() => {
     //     const fullScreen = async () => {
     //         if (mountViewport.isAvailable() && !isViewportMounting()) {
@@ -80,28 +76,6 @@ function ScanLecture() {
     //     fullScreen();
     // }, []);
 
-    const fetchChap = async () => {
-        const { data, status } = await api.get(
-            `/chapters?key=${param.id}&parentId=${param.parentId || ""}`
-        );
-
-        if (status != 200) {
-            throw new Error("Network response was not ok");
-        }
-
-        return data;
-    };
-
-    const fetchSpecialChap = async () => {
-        const { data, status } = await api.get(`/specials/?key=${param.id}`);
-
-        if (status != 200) {
-            throw new Error("Network response was not ok");
-        }
-
-        return data;
-    };
-
     const handleScroll = () => {
         document.documentElement.scrollTo({
             top: 0,
@@ -113,20 +87,15 @@ function ScanLecture() {
         data: chapData,
         isLoading,
         error: loadError,
-    } = useQuery({
-        queryKey: [[`chap_${param.id}`]],
-        queryFn: fetchChap,
+    } = useFetchChapters({
+        id: param.id,
+        parentId: param.parentId,
         enabled: !state?.chapData,
     });
 
-    const {
-        data: specialChapters,
-        isLoading: specialChaptersLoading,
-        error: specialChaptersError,
-    } = useQuery<{ chap: number }[], Error>({
-        queryKey: [[`special_${param.id}`]],
-        queryFn: fetchSpecialChap,
-        enabled: !state?.allChapters,
+    const { data: specialChapters, isLoading: specialChaptersLoading, error: specialChaptersError } = useFetchSpecialChapters({
+        id: param.id,
+        enabled: !state?.allChapters
     });
 
     const { loading, images, chapterName } = useFetchImages({
@@ -218,7 +187,7 @@ function ScanLecture() {
                     </h1>
                     <p className="text-sm text-slate-400">Please Try Later</p>
 
-                    <Link to={"/"} className="underline text-sm mt-3">
+                    <Link to={"/home"} className="underline text-sm mt-3">
                         Back To Home
                     </Link>
                 </div>
@@ -229,10 +198,7 @@ function ScanLecture() {
     if (isLoading || specialChaptersLoading) {
         return (
             <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
-                <Loading />
-                <p className="text-xs text-slate-400 mt-4">
-                    Chargement de la Page...
-                </p>
+                <Loading loadingText="Chargement de la Page..." />
             </div>
         );
     }
@@ -241,7 +207,7 @@ function ScanLecture() {
         <Page>
             <section
                 ref={scrollRef}
-                className="relative w-full lg:max-w-[700px] mx-auto"
+                className="relative w-full lg:max-w-[700px] mx-auto select-none"
             >
                 <ScanLectureControls
                     numChap={Object.keys(state?.chapData || chapData).length}
@@ -281,6 +247,11 @@ function ScanLecture() {
                     selectedChap={selectedChap}
                     visible={visible}
                     handleScroll={handleScroll}
+                    scanId={param.id}
+                    chapterNumber={selectedChap}
+                    parentId={param.parentId}
+                    state={state}
+                    showTip={scrollProgress >= 95}
                 />
             </section>
         </Page>

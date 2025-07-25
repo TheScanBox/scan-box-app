@@ -1,13 +1,8 @@
 import { CiStar } from "react-icons/ci";
 import { LazyLoadImage } from "react-lazy-load-image-component";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { IoIosTrash } from "react-icons/io";
-import {
-    openPopup,
-    isPopupOpened,
-    cloudStorage,
-} from "@telegram-apps/sdk-react";
-import { ScanResponse } from "../App";
+import { useUserScans } from "@/hooks/useUserScans";
 
 export type ResultItem = {
     imgUrl: string | undefined;
@@ -26,8 +21,7 @@ type CardProps = {
     isMore?: boolean;
     isProfile?: boolean;
     type?: "favourites" | "bookmarks";
-    hideIds?: string[];
-    setHideIds?: React.Dispatch<React.SetStateAction<string[]>>;
+    onDelete?: () => void
 };
 
 function Card({
@@ -39,58 +33,13 @@ function Card({
     helpPath,
     isMore = false,
     isProfile,
-    type,
-    hideIds,
-    setHideIds,
+    onDelete
 }: CardProps) {
     const navigate = useNavigate();
 
-    const handleDelete = async (
-        e: React.MouseEvent<HTMLDivElement, MouseEvent>
-    ) => {
-        e.stopPropagation();
-
-        if (isPopupOpened()) return;
-
-        const result = await openPopup({
-            title: "Supprime",
-            message: `Supprime ${title} de la liste ?`,
-            buttons: [
-                {
-                    text: "Confirme",
-                    type: "destructive",
-                    id: "delete",
-                },
-                {
-                    type: "cancel",
-                },
-            ],
-        });
-
-        if (result != "delete") return;
-        if (!type) return;
-
-        const results = (await cloudStorage.getItem(type)) as unknown as {
-            [index: string]: string;
-        };
-        if (!results) return;
-
-        const ResultsArr: ResultItem[] = JSON.parse(results[type]);
-
-        const filteredResults = ResultsArr.filter(
-            (result) => result.scanId != id
-        );
-
-        setHideIds?.((prev) => [...prev, `${type}_${id}`]);
-
-        await cloudStorage.setItem(type, JSON.stringify([...filteredResults]));
-    };
-
     return (
         <div
-            className={`active:opacity-5 cursor-pointer ${
-                isMore ? "w-full flex-1" : "min-w-32 w-32"
-            } ${hideIds?.includes(`${type}_${id}`) ? "hidden" : ""}`}
+            className={`active:opacity-5 cursor-pointer ${isMore ? "w-full flex-1" : "min-w-32 w-32"}`}
             onClick={() =>
                 navigate(
                     `${helpPath ? helpPath : ""}../details/${id}/${parentId}`
@@ -117,7 +66,10 @@ function Card({
                 {isProfile && (
                     <div
                         className="absolute top-2 right-2 z-20 hover:text-red-700"
-                        onClick={handleDelete}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete?.()
+                        }}
                     >
                         <IoIosTrash size={20} />
                     </div>

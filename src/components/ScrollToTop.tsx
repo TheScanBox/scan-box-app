@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import { FaArrowUp } from "react-icons/fa";
 
 const ScrollToTop = ({

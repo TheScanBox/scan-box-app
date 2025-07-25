@@ -1,6 +1,7 @@
 import {
     viewportContentSafeAreaInsets,
     viewportSafeAreaInsets,
+    isFullscreen
 } from "@telegram-apps/sdk-react";
 import { useEffect, useState } from "react";
 
@@ -11,6 +12,8 @@ const useSafeArea = (): { top: number; bottom: number } => {
 
     const [safeTop, setSafeTop] = useState(0);
     const [safeBottom, setSafeBottom] = useState(0);
+
+    const isFullScreen = isFullscreen();
 
     useEffect(() => {
         const safeTop = top + contentTop;
@@ -39,7 +42,7 @@ const useSafeArea = (): { top: number; bottom: number } => {
 
         setSafeTop(safeTop);
         setSafeBottom(safeBottom);
-    }, [top, contentTop, bottom, contentBottom]);
+    }, [top, contentTop, bottom, contentBottom, isFullScreen]);
 
     return { top: safeTop, bottom: safeBottom };
 };

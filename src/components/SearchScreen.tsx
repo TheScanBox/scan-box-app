@@ -6,7 +6,7 @@ import Loading from "./Loading";
 import { openTelegramLink } from "@telegram-apps/sdk-react";
 import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 
 type SearchScreenProps = {
     debouncedSearchText: string;
@@ -38,8 +38,7 @@ function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
     if (isLoading) {
         return (
             <div className="flex flex-col justify-center items-center overflow-y-hidden text-white mt-8">
-                <Loading />
-                <p className="text-xs text-slate-400 mt-2">Chargement...</p>
+                <Loading loadingText="Chargement..." />
             </div>
         );
     }

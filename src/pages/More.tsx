@@ -7,7 +7,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import Loading from "../components/Loading";
 import { useInView } from "react-intersection-observer";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import { useAlert } from "../context/AlertContext";
 
 const PAGE_SIZE = 10;
@@ -72,10 +72,7 @@ const More = () => {
         return (
             <Page>
                 <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
-                    <Loading />
-                    <p className="text-xs text-slate-400 mt-4">
-                        Chargement des données...
-                    </p>
+                    <Loading loadingText="Chargement des données..." />
                 </div>
             </Page>
         );
@@ -142,10 +139,7 @@ const More = () => {
                 >
                     {isLoading || isFetching ? (
                         <div className="flex flex-col justify-center items-center w-full mt-3">
-                            <Loading />
-                            <p className="text-xs text-slate-400 mt-2">
-                                Chargement...
-                            </p>
+                            <Loading loadingText="Chargement..." />
                         </div>
                     ) : (
                         ""

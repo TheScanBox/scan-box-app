@@ -1,5 +1,5 @@
 import { IoIosArrowForward, IoMdShareAlt, IoMdSunny } from "react-icons/io";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import { openTelegramLink } from "@telegram-apps/sdk-react";
 import { capitalize } from "../pages/ScanPreview";
 import { useAlert } from "../context/AlertContext";
@@ -57,24 +57,22 @@ function ScanLectureControls({
 
     return (
         <div
-            className={`${
-                showControls ? "show-controls" : "hidden"
-            } w-full text-white font-light fixed bg-black/90 p-3 z-30`}
+            className={`${showControls ? "show-controls" : "hidden"
+                } w-full text-white font-light select-none fixed bg-black/90 p-3 z-30 flex items-center justify-between`}
             style={{
                 paddingTop: top ? (showAlert ? 10 : top) : "1rem",
             }}
         >
             <div
                 className="flex items-center w-full font-semibold"
-                // style={{
-                //     paddingTop: showAlert ? 10 : 0,
-                // }}
+
             >
                 <p className="truncate max-w-36 capitalize">{title}</p>
                 <IoIosArrowForward size={20} />
-                <p>Chapitre {selectedChapName}</p>
+                <p className="truncate max-w-28">Chapitre {selectedChapName}</p>
             </div>
-            <div className="flex flex-row items-center gap-4">
+
+            <div className="flex flex-row items-center gap-3">
                 <button
                     className="cursor-pointer"
                     onClick={() => setShowLightConfig((prev) => !prev)}

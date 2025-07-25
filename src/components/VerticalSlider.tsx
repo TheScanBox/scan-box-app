@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { IoMdSunny } from "react-icons/io";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 
 type SliderType = {
     min: number;

@@ -2,13 +2,14 @@ import { cloudStorage } from "@telegram-apps/sdk-react";
 import { useState, useEffect } from "react";
 import { ScanImage } from "../components/ScanLoader";
 import { ScanResponse } from "../App";
+import { useUserScans } from "./useUserScans";
 
 type StateType = {
     chapData:
-        | {
-              [index: string]: number;
-          }
-        | undefined;
+    | {
+        [index: string]: number;
+    }
+    | undefined;
     data: ScanResponse & {
         chap?: string;
     };
@@ -35,8 +36,10 @@ const useFetchImages = ({
     chapData,
 }: useFetchImagesType) => {
     const [images, setImages] = useState<ScanImage[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [chapterName, setChapterName] = useState<number>();
+
+    const { updateState } = useUserScans();
 
     useEffect(() => {
         if (!state.allChapters && !allChapters) return;
@@ -50,38 +53,18 @@ const useFetchImages = ({
         const updateData = async () => {
             await cloudStorage.setItem(`selectedChap-${id}`, selectedChap);
 
-            const result = (await cloudStorage.getItem(
-                "recents"
-            )) as unknown as { [index: string]: string };
-
-            const item = {
-                imgUrl: state.data?.imgUrl,
-                title: state.data?.title,
-                chap: selectedChap,
-                chapName: chapName || "",
-                scanId: state.data.scanId,
-                scanParentId: state.data.scanParentId,
-                scanPath: state.data.scanPath,
-            };
-
-            if (!result || result["recents"] == "") {
-                await cloudStorage.setItem("recents", JSON.stringify([item]));
-
-                return;
-            }
-
-            const recentsArr: Array<typeof item> = JSON.parse(
-                result["recents"]
-            );
-
-            const filteredRecents = recentsArr.filter(
-                (result) => result.scanId != item?.scanId
-            );
-
-            await cloudStorage.setItem(
-                "recents",
-                JSON.stringify([item, ...filteredRecents])
-            );
+            await updateState({
+                type: "recents",
+                data: {
+                    imgUrl: state.data?.imgUrl,
+                    title: state.data?.title,
+                    chap: selectedChap,
+                    chapName: chapName.toString() || "",
+                    scanId: state.data.scanId,
+                    scanParentId: state.data.scanParentId,
+                    scanPath: state.data.scanPath,
+                },
+            });
         };
 
         let pages: ScanImage[] = [];
@@ -112,11 +95,11 @@ const useFetchImages = ({
             // setError(true);
         };
 
-        firstImage.src = pages[0].url;
+        firstImage.src = pages[0]?.url;
 
         // setPageUrls(pages);
-        setImages(pages);
         setLoading(true);
+        setImages(pages);
         setChapterName(chapName);
 
         updateData();

@@ -23,8 +23,8 @@ import { useAlert } from "../context/AlertContext";
 import api from "../libs/api";
 import { useQueryClient } from "@tanstack/react-query";
 
-init();
-miniAppReady();
+// init();
+// miniAppReady();
 
 const loadingMessages = [
     "Chargement des données...",
@@ -41,45 +41,10 @@ const loadingMessages = [
 
 const Auth = () => {
     const navigate = useNavigate();
-    const hasMounted = useRef(false);
     const queryClient = useQueryClient();
 
-    const { setShowAlert } = useAlert();
-
+    const hasAuthenticated = useRef(false);
     const [index, setIndex] = useState(0);
-
-    const mount = async () => {
-        if (
-            mountViewport.isAvailable() &&
-            !isViewportMounted() &&
-            !isViewportMounting()
-        ) {
-            if (!hasMounted.current) {
-                hasMounted.current = true;
-                await mountViewport();
-
-                const { tgWebAppPlatform } = retrieveLaunchParams();
-
-                if (
-                    tgWebAppPlatform != "android" &&
-                    tgWebAppPlatform != "ios"
-                ) {
-                    return;
-                }
-
-                setMiniAppHeaderColor.ifAvailable("#0f172a");
-                setMiniAppBackgroundColor.ifAvailable("#0f172a");
-
-                if (requestFullscreen.isAvailable() && !isFullscreen()) {
-                    try {
-                        await requestFullscreen();
-                    } catch (error) {
-                        alert(JSON.stringify(error));
-                    }
-                }
-            }
-        }
-    };
 
     const auth = async () => {
         const { tgWebAppStartParam, tgWebAppData } = retrieveLaunchParams();
@@ -95,6 +60,10 @@ const Auth = () => {
 
         if (isSpecialPath) payload = payload.replace("scan-", "scan_");
 
+        if (hasAuthenticated.current) return;
+
+        hasAuthenticated.current = true;
+
         try {
             const res = await axios.post(
                 `${import.meta.env.VITE_API_URL}/auth`,
@@ -103,10 +72,11 @@ const Auth = () => {
                     inviterID: command == "ref" ? payload : "",
                     username: user?.username || "",
                     firstName: user?.first_name || "",
-                    lastName: "",
+                    lastName: user?.last_name || "",
                     isBot: user?.is_bot || false,
                     isPremium: user?.is_premium || false,
                     languageCode: user?.language_code || "en",
+                    photoUrl: user?.photo_url || "",
                 },
                 {
                     headers: {
@@ -186,6 +156,42 @@ const Auth = () => {
                 return;
             }
 
+            if (command == "comment") {
+                const { data, status } = await api.get(
+                    `/scans/${payload}`
+                );
+
+                if (status != 200) {
+                    throw new Error("Network response was not ok");
+                }
+
+                queryClient.setQueryData([`scan_${payload}`], data);
+
+                navigate(`/comments/${payload}/${chap}?source=auth`, {
+                    state: {
+                        scan: {
+                            scanId: data.scanId,
+                            title: data.title,
+                            scanParentId: data.scanParentId,
+                            scanPath: data.scanPath,
+                            imgUrl: data.imgUrl,
+                            chap: parseInt(chap),
+                        }
+                    },
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (command == "replies") {
+                navigate(`/profile/comments?commentId=${payload}`, {
+                    replace: true,
+                });
+
+                return;
+            }
+
             navigate("/home", {
                 replace: true,
             });
@@ -213,7 +219,9 @@ const Auth = () => {
                 tgWebAppPlatform != "ios" &&
                 import.meta.env.VITE_APP_ENV != "development"
             ) {
-                navigate("/not-allowed");
+                navigate("/not-allowed", {
+                    replace: true
+                });
 
                 return;
             }
@@ -221,22 +229,14 @@ const Auth = () => {
             const isMiniApp = await checkMiniApp();
 
             if (!isMiniApp) {
-                navigate("/not-allowed");
+                navigate("/not-allowed", {
+                    replace: true
+                });
 
                 return;
             }
 
-            if (
-                miniApp.mount.isAvailable() &&
-                !miniApp.isMounted() &&
-                !miniApp.isMounting()
-            ) {
-                await miniApp.mount();
-                await mount();
-                await auth();
-
-                // setShowAlert(true);
-            }
+            await auth();
 
             if (bindMiniAppCssVars.isAvailable()) {
                 miniApp.bindCssVars();
@@ -258,10 +258,9 @@ const Auth = () => {
 
     return (
         <div className="w-full h-screen flex flex-col justify-center items-center">
-            <Loading />
-            <p className="text-xs text-slate-400 mt-4">
-                {loadingMessages[index]}
-            </p>
+            <Loading
+                loadingText={loadingMessages[index]}
+            />
         </div>
     );
 };

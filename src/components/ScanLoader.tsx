@@ -53,9 +53,8 @@ const ScanLoaderImage = ({
             {!(id in failedImages) && (
                 <div
                     style={{
-                        backgroundColor: `rgba(0, 0, 0, ${
-                            (90 - luminousity) / 100
-                        })`,
+                        backgroundColor: `rgba(0, 0, 0, ${(90 - luminousity) / 100
+                            })`,
                     }}
                     className="absolute top-0 right-0 left-0 bottom-0 z-10"
                 />
@@ -110,6 +109,15 @@ const ScanLoader = ({
     };
 
     useEffect(() => {
+        if (pageLoading) {
+            setLoadedImages([]);
+            setFailedImages({});
+            setLoading(false);
+        }
+    }, [pageLoading]);
+
+
+    useEffect(() => {
         if (images.length > 0) {
             setImagesQueue([...images]);
             setLoadedImages([]);
@@ -119,26 +127,35 @@ const ScanLoader = ({
     useEffect(() => {
         if (!imagesQueue.length || loading) return;
 
-        const nextQueue = [...imagesQueue];
-        const nextImage = nextQueue.shift();
+        // const nextQueue = [...imagesQueue];
+        // const nextImage = nextQueue.shift();
 
-        if (!nextImage) return;
-
+        const nextImage = imagesQueue[0];
         setLoading(true);
+
+        // if (!nextImage) return;
+
+        // setLoading(true);
 
         const img = new Image();
         img.onload = () => {
-            setLoadedImages((prev) => [...prev, nextImage]);
-            setImagesQueue(nextQueue);
+            const valideImage = imagesQueue.find(image => image.url == nextImage.url);
 
-            setLoading(false);
+            if (valideImage) {
+                setLoadedImages((prev) => [...prev, valideImage]);
+                setImagesQueue(prev => prev.slice(1));
+                setLoading(false);
+            }
         };
 
         img.onerror = () => {
-            setLoadedImages((prev) => [...prev, nextImage]);
-            setImagesQueue(nextQueue);
+            const valideImage = imagesQueue.find(image => image.url == nextImage.url)
 
-            setLoading(false);
+            if (valideImage) {
+                setLoadedImages((prev) => [...prev, valideImage]);
+                setImagesQueue(prev => prev.slice(1));
+                setLoading(false);
+            }
         };
 
         img.src = nextImage.url;
@@ -146,46 +163,39 @@ const ScanLoader = ({
 
     return (
         <div
-            className="z-10 w-full"
+            className="z-10 w-full select-none"
             onClick={() => {
                 setShowControls((prev) => !prev);
                 setShowLightConfig(false);
             }}
-            // onDoubleClick={() => setShowControls((prev) => !prev)}
+        // onDoubleClick={() => setShowControls((prev) => !prev)}
         >
             {pageLoading ? (
                 <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
-                    <Loading />
-                    <p className="text-xs text-slate-400 mt-4">
-                        Chargement des données...
-                    </p>
+                    <Loading loadingText="Chargement des données..." />
                 </div>
             ) : (
-                loadedImages.map((image, index) => (
-                    <ScanLoaderImage
-                        key={index}
-                        failedImages={failedImages}
-                        handleError={() => handleError(image.id)}
-                        handleLoad={() => handleLoad(image.id)}
-                        handleRetry={() => handleRetry(image.id)}
-                        id={image.id}
-                        index={index}
-                        luminousity={luminousity}
-                        src={image.url}
-                    />
-                ))
+                loadedImages
+                    .sort((a, b) => a.id - b.id)
+                    .filter(image => images.findIndex(img => img.url == image.url) != -1)
+                    .map((image, index) => (
+                        <ScanLoaderImage
+                            key={image.id}
+                            failedImages={failedImages}
+                            handleError={() => handleError(image.id)}
+                            handleLoad={() => handleLoad(image.id)}
+                            handleRetry={() => handleRetry(image.id)}
+                            id={image.id}
+                            index={index}
+                            luminousity={luminousity}
+                            src={image.url}
+                        />
+                    ))
             )}
 
             {loading && !pageLoading && (
                 <div className="flex gap-2 py-3 flex-col justify-center items-center overflow-y-hidden">
-                    <img
-                        // src="https://cdn.statically.io/gh/Anime-Sama/IMG/img/autres/loading_scans.gif"
-                        src={LoaderGif}
-                        alt="Loading..."
-                        className="w-12 h-12 mx-auto"
-                    />
-
-                    <p className="text-xs text-slate-400">Chargement...</p>
+                    <Loading loadingText="Chargement..." className="h-6 w-6" />
                 </div>
             )}
         </div>

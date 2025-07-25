@@ -1,7 +1,7 @@
 import SearchBar from "./SearchBar";
 import CardLoading from "./Loading/CardLoading";
 import Footer from "./Footer";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import { useAlert } from "../context/AlertContext";
 
 function HomeLoading() {
@@ -18,8 +18,8 @@ function HomeLoading() {
             <div className="p-3 pb-8">
                 <SearchBar
                     search=""
-                    setSearch={() => {}}
-                    handleSearch={() => {}}
+                    setSearch={() => { }}
+                    handleSearch={() => { }}
                 />
                 <div className="w-full h-48 mt-4 rounded-lg relative animate-pulse  bg-slate-700">
                     <div className="absolute bottom-0 p-2 text-white w-full flex justify-between items-center">

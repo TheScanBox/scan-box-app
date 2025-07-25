@@ -14,8 +14,8 @@ import { Page } from "../components/Page";
 import { useQuery } from "@tanstack/react-query";
 import api from "../libs/api";
 import { debounce } from "lodash";
-import useSafeArea from "../hooks/useSafeArea";
 import { useAlert } from "../context/AlertContext";
+import { useSafeArea } from "@/context/SafeAreaContext";
 
 function Home() {
     const [search, setSearch] = useState("");
@@ -26,7 +26,7 @@ function Home() {
 
     const debouncedSearch = debounce((query) => {
         setDebouncedSearchTerm(query);
-    }, 500);
+    }, 800);
 
     const handleSearch = (searchText: string) => {
         setSearch(searchText);
@@ -43,10 +43,18 @@ function Home() {
         return data.data;
     };
 
-    const { data, error, isLoading, refetch } = useQuery<ScanResponse[]>({
-        queryKey: ["banner_data"],
+
+    const {
+        data: recentData,
+        error: recentErr,
+        isLoading: recentLoading,
+        refetch,
+    } = useQuery<ScanResponse[]>({
+        queryKey: ["recent_data"],
         queryFn: () => fetchData("recent"),
+        staleTime: 300000,
     });
+
 
     const {
         data: mangaData,
@@ -55,7 +63,7 @@ function Home() {
     } = useQuery<ScanResponse[]>({
         queryKey: ["manga_data"],
         queryFn: () => fetchData("manga"),
-        staleTime: 300000,
+        staleTime: 300000
     });
     const {
         data: webtoonData,
@@ -66,21 +74,12 @@ function Home() {
         queryFn: () => fetchData("webtoon"),
         staleTime: 300000,
     });
-    const {
-        data: recentData,
-        error: recentErr,
-        isLoading: recentLoading,
-    } = useQuery<ScanResponse[]>({
-        queryKey: ["recent_data"],
-        queryFn: () => fetchData("recent"),
-        staleTime: 300000,
-    });
 
-    if (isLoading) {
+    if (recentLoading) {
         return <HomeLoading />;
     }
 
-    if ((error || !data?.length) && !isLoading) {
+    if ((recentErr || !recentData) && !recentLoading) {
         return (
             <div className="h-screen flex flex-col items-center justify-center text-white">
                 <h1 className="text-2xl capitalize">
@@ -98,6 +97,7 @@ function Home() {
 
     return (
         <Page back={false}>
+            {/* <AlertMessage /> */}
             <section
                 className="relative lg:max-w-[700px] mx-auto"
                 style={{
@@ -117,7 +117,7 @@ function Home() {
                         />
                     ) : (
                         <>
-                            {isLoading ? (
+                            {recentLoading ? (
                                 <div className="w-full h-48 mt-4 rounded-lg relative animate-pulse  bg-slate-700">
                                     <div className="absolute bottom-0 p-2 text-white w-full flex justify-between items-center">
                                         <div className="w-full space-y-2">
@@ -129,7 +129,7 @@ function Home() {
                             ) : (
                                 <Banner
                                     data={
-                                        data
+                                        [...(recentData || [])]
                                             ?.sort(
                                                 () =>
                                                     Math.random() -

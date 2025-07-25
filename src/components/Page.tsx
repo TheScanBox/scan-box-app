@@ -28,6 +28,11 @@ export function Page({
 
     useEffect(() => {
         return backButton.onClick(() => {
+            if (location.pathname.includes("profile")) {
+                navigate("/home", { replace: true });
+                return;
+            }
+
             if (
                 window.history.length <= 2 &&
                 location.pathname.includes("details")
@@ -53,6 +58,29 @@ export function Page({
                 });
 
                 return;
+            }
+
+            if (location.pathname.includes("comments") && location.search.includes("?source=auth")) {
+                navigate("/home", {
+                    replace: true
+                })
+
+                return;
+            }
+
+            if (location.pathname.includes("comments") && !location.search.includes("?source=profile")) {
+                const { scanId, chapterNumber, parentId, currentState } = location.state || {};
+
+                const path = parentId
+                    ? `/read/${scanId}/${chapterNumber}/${parentId}`
+                    : `/read/${scanId}/${chapterNumber}`;
+
+                navigate(path, {
+                    state: currentState,
+                    replace: true,
+                });
+
+                return
             }
 
             navigate(-1);

@@ -1,13 +1,15 @@
 import { Route, Routes } from "react-router-dom";
-import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
-import React, { useEffect, Suspense } from "react";
+import React, { Suspense } from "react";
 import NotAllowed from "./pages/NotAllowed";
 
 import { NotFound } from "./components";
 import useHeartbeat from "./hooks/useHeartbeat";
 import AlertMessage from "./components/AlertMessage";
-import Comments from "./pages/Comments";
 import PageLoading from "./components/PageLoading";
+import { SafeAreaProvider } from "./context/SafeAreaContext";
+import { useRequestFullscreen } from "./hooks/useRequestFullscreen";
+import { useDisableContextMenu } from "./hooks/useDisableContextMenu";
+import { retrieveLaunchParams } from "@telegram-apps/sdk-react";
 
 const Home = React.lazy(() =>
     import("./pages").then((m) => ({ default: m.Home }))
@@ -30,6 +32,26 @@ const ScanPreview = React.lazy(() =>
 const ScanLecture = React.lazy(() =>
     import("./pages").then((m) => ({ default: m.ScanLecture }))
 );
+const Comments = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.Comments }))
+);
+const User = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.User }))
+);
+
+const Scans = React.lazy(() =>
+    import("./pages/tabs").then((m) => ({ default: m.Scans }))
+);
+
+const ProfileComments = React.lazy(() =>
+    import("./pages/tabs").then((m) => ({ default: m.Comments }))
+);
+
+const Subscriptions = React.lazy(() =>
+    import("./pages/tabs").then((m) => ({ default: m.Subscriptions }))
+);
+
+
 
 type StringData = {
     name: string;
@@ -61,27 +83,30 @@ const intervalMs = 60000;
 function App() {
     const { tgWebAppData } = retrieveLaunchParams();
 
+    const { hasMountedViewport } = useRequestFullscreen();
     useHeartbeat(tgWebAppData?.user?.id?.toString() || "", intervalMs);
+    useDisableContextMenu();
 
-    useEffect(() => {
-        const disableContextMenu = (e: MouseEvent) => e.preventDefault();
-        document.addEventListener("contextmenu", disableContextMenu);
-
-        return () => {
-            document.removeEventListener("contextmenu", disableContextMenu);
-        };
-    }, []);
+    if (!hasMountedViewport) {
+        return (
+            <PageLoading />
+        );
+    }
 
     return (
-        <>
+        <SafeAreaProvider>
             <AlertMessage />
-
             <Suspense fallback={<PageLoading />}>
                 <Routes>
                     <Route path="/" element={<Auth />} />
                     <Route path="not-allowed" element={<NotAllowed />} />
                     <Route path="home" element={<Home />} />
-                    <Route path="profile" element={<Profile />} />
+                    <Route path="profile" element={<Profile />}>
+                        <Route index element={<Scans />} />
+                        <Route path="comments" element={<ProfileComments />} />
+                        <Route path="subscriptions" element={<Subscriptions />} />
+                    </Route>
+                    <Route path="user/:userId" element={<User />} />
                     <Route path="more/:id" element={<More />} />
                     <Route path="tags/:id" element={<Tags />} />
                     <Route
@@ -92,12 +117,12 @@ function App() {
                         path="read/:id/:chapter/:parentId?"
                         element={<ScanLecture />}
                     />
-                    <Route path="comments/:id" element={<Comments />} />
+                    <Route path="comments/:scanId/:chapterNumber" element={<Comments />} />
                     {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </Suspense>
-        </>
+        </SafeAreaProvider>
     );
 }
 

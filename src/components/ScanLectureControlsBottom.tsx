@@ -1,12 +1,18 @@
-import { IoIosArrowDropleft, IoIosArrowDropright } from "react-icons/io";
+import { IoIosArrowDropleft, IoIosArrowDropright, IoMdArrowDropdown } from "react-icons/io";
 import { FaHeart } from "react-icons/fa";
 import { BiCommentDetail } from "react-icons/bi";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import ScrollToTop from "./ScrollToTop";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { hapticFeedback } from "@telegram-apps/sdk";
 import { useNavigate } from "react-router-dom";
+import useGetCommentCount from "@/hooks/comments/useGetCommentCount";
+import { StateType } from "@/pages/ScanLecture";
+import useGetChapterLikesCount from "@/hooks/chapterLikes/useGetChapterLikesCount";
+import useUpdateChapterLike from "@/hooks/chapterLikes/useUpdateChapterLike";
+import useUser from "@/hooks/useUser";
+import Tooltip from "./Tooltip";
 
 type ScanLectureControlsBottomProps = {
     numChap: number;
@@ -15,6 +21,11 @@ type ScanLectureControlsBottomProps = {
     selectedChap: string;
     visible: boolean;
     handleScroll: () => void;
+    scanId: string,
+    chapterNumber: string
+    parentId?: string;
+    state: StateType;
+    showTip?: boolean;
 };
 
 const ScanLectureControlsBottom = ({
@@ -24,18 +35,57 @@ const ScanLectureControlsBottom = ({
     selectedChap,
     visible,
     handleScroll,
+    scanId,
+    parentId,
+    chapterNumber,
+    state,
+    showTip = false
 }: ScanLectureControlsBottomProps) => {
     const navigate = useNavigate();
     const { bottom } = useSafeArea();
+    const user = useUser();
+
+    const { isLoading, commentCount } = useGetCommentCount(scanId, chapterNumber);
+    const { isLoading: isLoadingLikesCount, data: likesCountData } = useGetChapterLikesCount(scanId, chapterNumber);
+    const { mutateAsync: updateChapterLike } = useUpdateChapterLike()
     const [isLiked, setIsLiked] = useState(false);
 
-    const handleLike = () => {
+    useEffect(() => {
+        if (likesCountData) {
+            setIsLiked(likesCountData.liked);
+        }
+    }, [likesCountData]);
+
+    const handleLike = async () => {
         if (hapticFeedback.impactOccurred.isAvailable()) {
             // hapticFeedback.selectionChanged();
             hapticFeedback.impactOccurred("medium");
         }
 
-        setIsLiked((prev) => !prev);
+        // setIsLiked((prev) => !prev);
+        await updateChapterLike({
+            scanId,
+            chapterNumber: parseInt(chapterNumber),
+            userId: user?.id || 0,
+        })
+    };
+
+    const handleReadComments = () => {
+        if (hapticFeedback.impactOccurred.isAvailable()) {
+            hapticFeedback.impactOccurred("medium");
+        }
+
+        // () => navigate(`../../../comments/${scanId}/${chapterNumber}`)
+
+        navigate(`/comments/${scanId}/${chapterNumber}`, {
+            state: {
+                scanId,
+                chapterNumber,
+                parentId,
+                currentState: state,
+            },
+            replace: true,
+        });
     };
 
     const handleNavigate = (delta: number) => {
@@ -51,6 +101,7 @@ const ScanLectureControlsBottom = ({
             return;
         }
 
+        setIsLiked(false);
         setSelectedChap(newSelectedChap.toString());
     };
 
@@ -59,50 +110,59 @@ const ScanLectureControlsBottom = ({
             style={{
                 paddingBottom: bottom ? bottom : "1rem",
             }}
-            className={`${
-                showControls ? "show-controls" : "hidden"
-            } w-full items-center justify-end text-white font-light fixed bottom-0 bg-black/90 p-3 z-30`}
+            className={`${showControls ? "show-controls" : "hidden"
+                } w-full items-center justify-between text-white select-none font-light fixed bottom-0 bg-black/90 p-3 z-30`}
         >
             <ScrollToTop visible={visible} handleScroll={handleScroll} />
             <p className="text-[10px] text-slate-400 hidden">
                 Tapez 2 fois pour afficher.
             </p>
 
-            <div className="gap-4 items-center hidden">
-                <div className="flex gap-1 items-center">
+            <div className="gap-4 items-center flex">
+                <div
+                    onClick={handleLike}
+                    className="flex gap-1 items-center cursor-pointer">
                     <FaHeart
                         size={26}
-                        className={`${
-                            isLiked ? "text-red-600" : "text-white"
-                        } cursor-pointer`}
-                        onClick={handleLike}
-                    />
+                        className={`${isLiked ? "text-red-600" : "text-white"
+                            }`}
 
-                    <span className="text-xs">1.2k</span>
+                    />
+                    {isLoadingLikesCount ? (
+                        <span className="text-xs">...</span>
+                    ) : (
+                        <span className="text-xs">
+                            {likesCountData?.likeCount || 0}
+                        </span>
+                    )}
+
                 </div>
 
-                <div className="flex gap-1 items-center">
-                    <BiCommentDetail
-                        size={26}
-                        className="text-slate-400 cursor-pointer"
-                        // onClick={() =>
-                        //     alert("⚠ Comments are currently unavailable.")
-                        // }
-                        onClick={() => navigate("../../../comments/test")}
+                <div
+                    onClick={handleReadComments}
+                    className="flex gap-1 items-center cursor-pointer relative">
+                    <Tooltip
+                        text="Laissez un commentaire"
+                        show={showTip}
                     />
-                    <span className="text-xs">102</span>
+                    <BiCommentDetail size={26} className="text-white" />
+                    {isLoading ? (
+                        <span className="text-xs">...</span>
+                    ) : (
+                        <span className="text-xs">{commentCount}</span>
+                    )}
                 </div>
             </div>
             <div className="flex gap-2">
                 <button
-                    className="outline-none"
+                    className="outline-none cursor-pointer"
                     disabled={Number(selectedChap) == 1}
                     onClick={() => handleNavigate(-1)}
                 >
                     <IoIosArrowDropleft size={28} />
                 </button>
                 <button
-                    className="outline-none"
+                    className="outline-none cursor-pointer"
                     disabled={Number(selectedChap) == numChap}
                     onClick={() => handleNavigate(1)}
                 >

@@ -27,19 +27,28 @@ import { Tag, ChapterItem } from "../components";
 import { useQuery } from "@tanstack/react-query";
 import { Page } from "../components/Page";
 import api from "../libs/api";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import ScanListHeader from "../components/ScanListHeader";
 import { useAlert } from "../context/AlertContext";
 import { createPortal } from "react-dom";
 import LoaderGif from "../assets/loader.gif";
 import StarRating from "../components/StarRating";
-import { debounce } from "lodash";
+import { debounce, get } from "lodash";
 import useRating from "../hooks/useRating";
+import Loading from "@/components/Loading";
+import { useUserScans } from "@/hooks/useUserScans";
+import { useGetLikedChapters } from "@/hooks/useGetLikedChapters";
+import useFetchChapters from "@/hooks/useFetchChapters";
 
 export type FavBookType = {
     img: string;
     name: string;
     scanId: string;
+};
+
+export type LikeChapterType = {
+    chapterNumber: number;
+    likeCount: number;
 };
 
 export const capitalize = (text: string) => {
@@ -65,7 +74,6 @@ function ScanPreview() {
     const [open, setOpen] = useState(false);
     const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
     const [openRatings, setOpenRatings] = useState(false);
-    const [initialRating, setInitialRating] = useState(0);
 
     const [numChap, setNumChap] = useState(0);
     const [totalPage, setTotalPage] = useState(0);
@@ -85,11 +93,13 @@ function ScanPreview() {
     const user = tgWebAppData?.user;
 
     const { top, bottom } = useSafeArea();
-    const { loading: ratingLoading, rating } = useRating(
+    const { loading: ratingLoading, rating, setRating } = useRating(
         user?.id.toString()!,
         param.id!
     );
     const { showAlert } = useAlert();
+
+    const { getScanItem, updateState } = useUserScans()
 
     const fetchData = async () => {
         const { data, status } = await api.get(`/scans/${param.id}`);
@@ -101,35 +111,19 @@ function ScanPreview() {
         return data;
     };
 
-    const fetchChap = async () => {
-        const { data, status } = await api.get(
-            `/chapters?key=${param.id}&parentId=${param.parentId || ""}`
-        );
-
-        if (status != 200) {
-            throw new Error("Network response was not ok");
-        }
-
-        return data;
-    };
-
     const { data, error, isLoading } = useQuery<ScanResponse>({
         queryKey: [`scan_${param.id}_${param.parentId}`],
         queryFn: fetchData,
-        staleTime: 600000,
+        staleTime: Infinity,
     });
 
-    const {
-        data: chapData,
-        error: chapError,
-        isFetching: chapFetching,
-        isLoading: chapLoading,
-        refetch,
-    } = useQuery<{ [index: string]: number | boolean; failed: boolean }>({
-        queryKey: [`chap_${param.id}`],
-        queryFn: fetchChap,
-        staleTime: 600000,
+    const { data: chapData, error: chapError, isFetching: chapFetching, isLoading: chapLoading, refetch } = useFetchChapters({
+        id: param.id || "",
+        parentId: param.parentId,
+        enabled: Boolean(param.id),
     });
+
+    const { data: likedChapters } = useGetLikedChapters<LikeChapterType[]>(param.id || "")
 
     // useEffect(() => {
     //     const exitFull = async () => {
@@ -176,37 +170,6 @@ function ScanPreview() {
             const chapResults = (await cloudStorage.getItem(
                 `selectedChap-${param.id}`
             )) as unknown as { [index: string]: string };
-
-            const favResults = (await cloudStorage.getItem(
-                "favourites"
-            )) as unknown as { [index: string]: string };
-            const bookmarkResults = (await cloudStorage.getItem(
-                "bookmarks"
-            )) as unknown as { [index: string]: string };
-
-            if (favResults && favResults["favourites"] != "") {
-                const favouritesArr: FavBookType[] = JSON.parse(
-                    favResults["favourites"]
-                );
-
-                const filterFavourites = favouritesArr?.find((result) => {
-                    return result.scanId === data?.scanId;
-                });
-
-                setIsFavourite(filterFavourites ? true : false);
-            }
-
-            if (bookmarkResults && bookmarkResults["bookmarks"] != "") {
-                const bookmarksArr: FavBookType[] = JSON.parse(
-                    bookmarkResults["bookmarks"]
-                );
-
-                const filterBookmarks = bookmarksArr?.find(
-                    (result) => result.scanId === data?.scanId
-                );
-
-                setBookmark(filterBookmarks ? true : false);
-            }
 
             setSavedChap(
                 parseInt(chapResults[`selectedChap-${param.id}`])
@@ -277,51 +240,62 @@ function ScanPreview() {
 
     const handleMarks = async (key: "favourites" | "bookmarks") => {
         try {
-            key == "bookmarks"
-                ? setBookmark(!bookmark)
-                : setIsFavourite(!isFavourite);
+            // key == "bookmarks"
+            //     ? setBookmark(!bookmark)
+            //     : setIsFavourite(!isFavourite);
 
-            const result = (await cloudStorage.getItem(key)) as unknown as {
-                [index: string]: string;
-            };
+            // const result = (await cloudStorage.getItem(key)) as unknown as {
+            //     [index: string]: string;
+            // };
 
-            const item = {
-                imgUrl: data?.imgUrl,
-                title: data?.title,
-                scanId: data?.scanId,
-                scanParentId: data?.scanParentId,
-                stars: data?.stars,
-            };
+            await updateState({
+                type: key,
+                data: {
+                    imgUrl: data?.imgUrl,
+                    title: data?.title,
+                    scanId: data?.scanId,
+                    scanParentId: data?.scanParentId,
+                    stars: data?.stars,
+                },
+            });
 
-            if (!result || result[key] == "") {
-                await cloudStorage.setItem(key, JSON.stringify([item]));
+            // const item = {
+            //     imgUrl: data?.imgUrl,
+            //     title: data?.title,
+            //     scanId: data?.scanId,
+            //     scanParentId: data?.scanParentId,
+            //     stars: data?.stars,
+            // };
 
-                return;
-            }
+            // if (!result || result[key] == "") {
+            //     await cloudStorage.setItem(key, JSON.stringify([item]));
 
-            const bookmarksArr: Array<typeof item> = JSON.parse(result[key]);
+            //     return;
+            // }
 
-            const isInList = bookmarksArr.find(
-                (el) => el.scanId == data?.scanId
-            );
+            // const bookmarksArr: Array<typeof item> = JSON.parse(result[key]);
 
-            const filterBookmarks = bookmarksArr.filter(
-                (result) => result.scanId != data?.scanId
-            );
+            // const isInList = bookmarksArr.find(
+            //     (el) => el.scanId == data?.scanId
+            // );
 
-            if (isInList) {
-                await cloudStorage.setItem(
-                    key,
-                    JSON.stringify([...filterBookmarks])
-                );
+            // const filterBookmarks = bookmarksArr.filter(
+            //     (result) => result.scanId != data?.scanId
+            // );
 
-                return;
-            }
+            // if (isInList) {
+            //     await cloudStorage.setItem(
+            //         key,
+            //         JSON.stringify([...filterBookmarks])
+            //     );
 
-            await cloudStorage.setItem(
-                key,
-                JSON.stringify([item, ...filterBookmarks])
-            );
+            //     return;
+            // }
+
+            // await cloudStorage.setItem(
+            //     key,
+            //     JSON.stringify([item, ...filterBookmarks])
+            // );
         } catch (error) {
             console.log(error);
 
@@ -338,9 +312,8 @@ function ScanPreview() {
             `https://t.me/share/url?text=${encodeURIComponent(
                 `Lisez les derniere chapitre de **${capitalize(
                     data?.title || ""
-                )}** gratuitement !\n\n${
-                    data?.continuation &&
-                    `**Chapitre apres l'anime : **${data.continuation}\n\n`
+                )}** gratuitement !\n\n${data?.continuation &&
+                `**Chapitre apres l'anime : **${data.continuation}\n\n`
                 }${`${APP_URL}?startapp=read_${param.id}`}`
             )}`
         );
@@ -352,26 +325,8 @@ function ScanPreview() {
     };
 
     const submitRating = debounce(async (rating: number) => {
-        try {
-            const { status } = await api.post("/rating", {
-                scanId: param.id,
-                userId: user?.id.toString(),
-                value: rating.toFixed(1),
-            });
-
-            if (status !== 200) {
-                return;
-            }
-
-            setInitialRating(rating);
-        } catch (error) {
-            console.error(error);
-        }
+        await setRating(rating.toFixed(1));
     }, 800);
-
-    const handleRatingUpdate = async (rate: number) => {
-        submitRating(rate);
-    };
 
     const handleAlert = () => {
         openTelegramLink(
@@ -403,7 +358,7 @@ function ScanPreview() {
         );
     }
 
-    if (isLoading) {
+    if (isLoading || !data) {
         return (
             <Page>
                 <div
@@ -512,27 +467,25 @@ function ScanPreview() {
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={() => handleMarks("favourites")}
-                                className={`p-2 flex rounded-md ${
-                                    isFavourite
-                                        ? "bg-red-600 text-white"
-                                        : "bg-white text-red-600"
-                                } `}
+                                className={`p-2 flex rounded-md cursor-pointer ${Boolean(getScanItem("favourites", param.id || ""))
+                                    ? "bg-red-600 text-white"
+                                    : "bg-white text-red-600"
+                                    } `}
                             >
                                 <AiFillHeart size={24} />
                             </button>
                             <button
                                 onClick={() => handleMarks("bookmarks")}
-                                className={`p-2 flex rounded-md ${
-                                    bookmark
-                                        ? "bg-slate-700  text-white"
-                                        : "bg-white text-slate-700"
-                                }`}
+                                className={`p-2 flex rounded-md cursor-pointer ${Boolean(getScanItem("bookmarks", param.id || ""))
+                                    ? "bg-slate-700  text-white"
+                                    : "bg-white text-slate-700"
+                                    }`}
                             >
                                 <CiBookmark size={24} />
                             </button>
                             <button
                                 onClick={handleShare}
-                                className={`p-2 flex rounded-md bg-white text-slate-700`}
+                                className={`p-2 flex rounded-md bg-white cursor-pointer text-slate-700`}
                             >
                                 <IoShareSocial size={24} />
                             </button>
@@ -540,7 +493,7 @@ function ScanPreview() {
                             <button
                                 ref={buttonRef}
                                 onClick={handleToggleMenu}
-                                className={`-ml-1.5 flex rounded-md text-slate-200`}
+                                className={`-ml-1.5 flex rounded-md cursor-pointer text-slate-200`}
                             >
                                 <BsThreeDotsVertical size={26} />
                             </button>
@@ -549,8 +502,8 @@ function ScanPreview() {
                         {openRatings && (
                             <div>
                                 <StarRating
-                                    initial={initialRating || rating}
-                                    onRate={handleRatingUpdate}
+                                    initial={rating || 0}
+                                    onRate={async (rating) => await submitRating(rating)}
                                 />
                             </div>
                         )}
@@ -576,12 +529,7 @@ function ScanPreview() {
                                         <IoStarOutline size={17} />
                                     </span>
                                     Notez {ratingLoading && "(?)"}
-                                    {!ratingLoading &&
-                                        (initialRating == 0
-                                            ? rating > 0
-                                                ? `(${rating.toFixed(1)})`
-                                                : ""
-                                            : `(${initialRating.toFixed(1)})`)}
+                                    {!ratingLoading && rating > 0 ? `(${rating.toFixed(1)})` : ""}
                                 </li>
                                 <li
                                     onClick={handleSubscribe}
@@ -616,16 +564,16 @@ function ScanPreview() {
                     <div className="text-white">
                         <h2 className="text-lg mb-2 font-bold">Synopsis</h2>
                         <p className="text-sm text-justify">
-                            {readMore
-                                ? data?.description
-                                : data?.description.slice(0, 250)}
-                            {readMore ? " " : "... "}
-                            <span
-                                className="underline cursor-pointer text-red-400"
-                                onClick={() => setReadMore((prev) => !prev)}
-                            >
-                                {readMore ? "Redius" : "Voir plus"}
-                            </span>
+                            {readMore ? data.description : data.description.length > 200 ? `${data.description.slice(0, 200)}...` : data?.description}
+                            {data?.description.length > 200 && (
+                                <span
+                                    onClick={() => setReadMore(!readMore)}
+                                    className="cursor-pointer text-red-400 text-xs"
+                                >
+                                    {readMore ? " Voir Moins" : " Voir Plus"}
+                                </span>
+                            )}
+
                         </p>
                     </div>
 
@@ -649,16 +597,15 @@ function ScanPreview() {
 
                 {(chapLoading || chapFetching) && !chapData && (
                     <div
-                        className="flex flex-col justify-center items-center mt-14"
+                        className="flex flex-col justify-center items-center mt-6"
                         style={{
                             paddingBottom: bottom,
                         }}
                     >
-                        {/* <Loading /> */}
-                        <img src={LoaderGif} className="w-9 h-9" />
-                        <p className="text-xs text-slate-400 mt-2">
-                            Chargement...
-                        </p>
+                        <Loading
+                            loadingText="Chargement des chapitres..."
+                            className="w-4 h-4"
+                        />
                     </div>
                 )}
 
@@ -678,64 +625,78 @@ function ScanPreview() {
                         <div className={`flex flex-col gap-2`}>
                             {order == "desc"
                                 ? [...allChapters]
-                                      .reverse()
-                                      .slice(
-                                          (numPages - currentPage) * 10,
-                                          (numPages - currentPage) * 10 + 10
-                                      )
-                                      .map((obj) => (
-                                          <div
-                                              key={Object.keys(obj)[0]}
-                                              onClick={() =>
-                                                  handleRead(
-                                                      parseInt(
-                                                          Object.keys(obj)[0]
-                                                      )
-                                                  )
-                                              }
-                                              className="cursor-pointer hover:opacity-40"
-                                          >
-                                              <ChapterItem
-                                                  chapterNum={
-                                                      Object.values(obj)[0]
-                                                  }
-                                                  img={data?.imgUrl}
-                                                  name={data?.title}
-                                              />
-                                          </div>
-                                      ))
+                                    .reverse()
+                                    .slice(
+                                        (numPages - currentPage) * 10,
+                                        (numPages - currentPage) * 10 + 10
+                                    )
+                                    .map((obj) => (
+                                        <div
+                                            key={Object.keys(obj)[0]}
+                                            onClick={() =>
+                                                handleRead(
+                                                    parseInt(
+                                                        Object.keys(obj)[0]
+                                                    )
+                                                )
+                                            }
+                                            className="cursor-pointer hover:opacity-40"
+                                        >
+                                            <ChapterItem
+                                                chapterNum={
+                                                    Object.values(obj)[0]
+                                                }
+                                                img={data?.imgUrl}
+                                                name={data?.title}
+                                                isLiked={
+                                                    likedChapters?.findIndex(
+                                                        (chap) =>
+                                                            chap.chapterNumber ===
+                                                            Object.values(obj)[0]
+                                                    ) !== -1
+                                                }
+                                            />
+                                        </div>
+                                    ))
                                 : allChapters
-                                      .slice(
-                                          (currentPage - 1) * 10,
-                                          (currentPage - 1) * 10 + 10
-                                      )
-                                      .map((obj) => (
-                                          <div
-                                              key={Object.keys(obj)[0]}
-                                              onClick={() =>
-                                                  handleRead(
-                                                      parseInt(
-                                                          Object.keys(obj)[0]
-                                                      )
-                                                  )
-                                              }
-                                              className="cursor-pointer hover:opacity-40"
-                                          >
-                                              <ChapterItem
-                                                  chapterNum={
-                                                      Object.values(obj)[0]
-                                                  }
-                                                  img={data?.imgUrl}
-                                                  name={data?.title}
-                                              />
-                                          </div>
-                                      ))}
+                                    .slice(
+                                        (currentPage - 1) * 10,
+                                        (currentPage - 1) * 10 + 10
+                                    )
+                                    .map((obj) => (
+                                        <div
+                                            key={Object.keys(obj)[0]}
+                                            onClick={() =>
+                                                handleRead(
+                                                    parseInt(
+                                                        Object.keys(obj)[0]
+                                                    )
+                                                )
+                                            }
+                                            className="cursor-pointer hover:opacity-40"
+                                        >
+                                            <ChapterItem
+                                                chapterNum={
+                                                    Object.values(obj)[0]
+                                                }
+                                                img={data?.imgUrl}
+                                                name={data?.title}
+                                                isLiked={
+                                                    likedChapters?.findIndex(
+                                                        (chap) =>
+                                                            chap.chapterNumber ===
+                                                            Object.values(obj)[0]
+                                                    ) !== -1
+                                                }
+                                            />
+                                        </div>
+                                    ))}
                         </div>
 
                         {!isObjectEmpty(chapData) && (
                             <button
                                 onClick={() => handleRead(savedChap ?? 1)}
-                                className="flex items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
+                                className="flex cursor-pointer items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
                                 style={{
                                     bottom: `calc(${bottom}px + 3.5rem)`,
                                 }}
@@ -757,11 +718,10 @@ function ScanPreview() {
 
                                     setCurrentPage(currentPage + 1);
                                 }}
-                                className={`${
-                                    currentPage == numPages
-                                        ? "cursor-not-allowed opacity-35"
-                                        : "cursor-pointer"
-                                }`}
+                                className={`${currentPage == numPages
+                                    ? "cursor-not-allowed opacity-35"
+                                    : "cursor-pointer"
+                                    }`}
                             >
                                 <IoIosArrowBack
                                     color="white"
@@ -776,11 +736,10 @@ function ScanPreview() {
                                     <button
                                         key={page}
                                         onClick={() => setCurrentPage(page)}
-                                        className={`w-8 h-8 flex items-center justify-center text-white rounded-md ${
-                                            currentPage === page
-                                                ? "bg-red-400"
-                                                : "bg-slate-500"
-                                        }`}
+                                        className={`w-8 h-8 flex items-center cursor-pointer justify-center text-white rounded-md ${currentPage === page
+                                            ? "bg-red-400"
+                                            : "bg-slate-500"
+                                            }`}
                                     >
                                         {page}
                                     </button>
@@ -792,11 +751,10 @@ function ScanPreview() {
 
                                     setCurrentPage(currentPage - 1);
                                 }}
-                                className={`${
-                                    currentPage == 1
-                                        ? "cursor-not-allowed opacity-35"
-                                        : "cursor-pointer"
-                                }`}
+                                className={`${currentPage == 1
+                                    ? "cursor-not-allowed opacity-35"
+                                    : "cursor-pointer"
+                                    }`}
                             >
                                 <IoIosArrowForward
                                     color="white"

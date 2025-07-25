@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Page } from "../components/Page";
-import useSafeArea from "../hooks/useSafeArea";
+import { useSafeArea } from "@/context/SafeAreaContext";
 import { ScanResponse } from "../App";
 import api from "../libs/api";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -63,10 +63,7 @@ const Tags = () => {
         return (
             <Page>
                 <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
-                    <Loading />
-                    <p className="text-xs text-slate-400 mt-4">
-                        Chargement des données...
-                    </p>
+                    <Loading loadingText="Chargement des données..." />
                 </div>
             </Page>
         );
@@ -135,10 +132,7 @@ const Tags = () => {
                 >
                     {isLoading || isFetching ? (
                         <div className="flex flex-col justify-center items-center w-full mt-3">
-                            <Loading />
-                            <p className="text-xs text-slate-400 mt-2">
-                                Chargement...
-                            </p>
+                            <Loading loadingText="Chargement..." />
                         </div>
                     ) : (
                         ""
