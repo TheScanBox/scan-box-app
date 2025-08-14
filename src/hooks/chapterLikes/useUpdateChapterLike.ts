@@ -6,6 +6,7 @@ type ParamsType = {
     scanId: string;
     chapterNumber: number;
     userId: number
+    liked: boolean;
 };
 
 const updateChapterLike = async ({ chapterNumber, scanId, userId }: ParamsType) => {
@@ -26,46 +27,83 @@ const useUpdateChapterLike = () => {
 
     return useMutation({
         mutationFn: async (params: ParamsType) => updateChapterLike(params),
-        onSuccess: (updatedLike) => {
+        onMutate: async (params) => {
+            await queryClient.cancelQueries({
+                queryKey: ['chapterLikesCount', params.scanId, params.chapterNumber]
+            });
+
+            await queryClient.cancelQueries({
+                queryKey: ['likedChapters', params.scanId]
+            });
+
+            const prevLikesCount = queryClient.getQueryData<any>([
+                'chapterLikesCount',
+                params.scanId,
+                params.chapterNumber
+            ]);
+
+            const prevLikedChapters = queryClient.getQueryData<LikeChapterType[]>([
+                'likedChapters',
+                params.scanId
+            ]);
+
+            // Update "chapterLikesCount" optimistically
             queryClient.setQueryData(
-                ['chapterLikesCount', updatedLike.scanId, updatedLike.chapterNumber],
+                ['chapterLikesCount', params.scanId, params.chapterNumber],
                 (oldData: any | undefined) => {
                     if (!oldData) return oldData;
+                    const newLikeCount = params.liked
+                        ? oldData.likeCount + 1
+                        : oldData.likeCount - 1;
 
                     return {
                         ...oldData,
-                        likeCount: updatedLike.likeCount,
-                        liked: updatedLike.liked,
+                        likeCount: newLikeCount,
+                        liked: params.liked
                     };
                 }
             );
 
+            // Update "likedChapters" optimistically
             queryClient.setQueryData(
-                ["likedChapters", updatedLike.scanId],
+                ['likedChapters', params.scanId],
                 (oldData: LikeChapterType[] | undefined) => {
                     if (!oldData) return oldData;
 
-                    if (updatedLike.liked) {
-                        // Add chapterNumber if not already present
-                        if (!oldData.some(chapter => chapter.chapterNumber === updatedLike.chapterNumber)) {
+                    if (params.liked) {
+                        if (!oldData.some(c => c.chapterNumber === params.chapterNumber)) {
                             return [
                                 ...oldData,
                                 {
-                                    chapterNumber: updatedLike.chapterNumber,
-                                    likeCount: updatedLike.likeCount
+                                    chapterNumber: params.chapterNumber,
+                                    likeCount: (prevLikesCount?.likeCount ?? 0) + 1
                                 }
                             ];
                         }
                         return oldData;
                     } else {
-                        // Remove chapterNumber if present
-                        return oldData.filter(
-                            (chapter) => chapter.chapterNumber !== updatedLike.chapterNumber
-                        );
+                        return oldData.filter(c => c.chapterNumber !== params.chapterNumber);
                     }
                 }
             );
-        }
+
+            // Return rollback snapshot
+            return { prevLikesCount, prevLikedChapters };
+        },
+        onError: (_err, params, context) => {
+            if (context?.prevLikesCount) {
+                queryClient.setQueryData(
+                    ['chapterLikesCount', params.scanId, params.chapterNumber],
+                    context.prevLikesCount
+                );
+            }
+            if (context?.prevLikedChapters) {
+                queryClient.setQueryData(
+                    ['likedChapters', params.scanId],
+                    context.prevLikedChapters
+                );
+            }
+        },
     });
 }
 

@@ -67,6 +67,7 @@ const ScanLectureControlsBottom = ({
             scanId,
             chapterNumber: parseInt(chapterNumber),
             userId: user?.id || 0,
+            liked: !isLiked
         })
     };
 

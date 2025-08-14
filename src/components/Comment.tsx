@@ -129,7 +129,7 @@ const Comment = ({ content, date, id, user, dislikesCount, isLiked, likesCount, 
                                 <span className="text-[0.6rem] text-slate-400">Vous</span>
                             )}
                         </div>
-                        <p className="text-xs text-slate-400">{formatDate(date)}</p>
+                        <p className="text-xs text-slate-400">{formatDate(date || "")}</p>
                     </div>
                     <div className="text-white cursor-pointer relative">
                         <button onClick={() => setShowOptions(!showOptions)} className="p-1 hover:bg-slate-700 rounded-full cursor-pointer">

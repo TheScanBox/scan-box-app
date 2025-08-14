@@ -77,7 +77,7 @@ const useFetchImages = ({
 
         if (!newChapData) return;
 
-        for (let i = 1; i <= newChapData?.[`eps${selectedChap!}`]; i++) {
+        for (let i = 1; i <= newChapData?.[selectedChap!]; i++) {
             pages.push({
                 id: i,
                 url: `https://anime-sama.fr/s2/scans/${state.data.scanPath}/${selectedChap}/${i}.jpg`,

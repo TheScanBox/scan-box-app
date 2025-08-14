@@ -78,7 +78,7 @@ export type ScanResponse = {
     updatedAt: Date;
 };
 
-const intervalMs = 60000;
+const intervalMs = 300000;
 
 function App() {
     const { tgWebAppData } = retrieveLaunchParams();
