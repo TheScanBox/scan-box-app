@@ -3,7 +3,6 @@ import CommentInput from './CommentInput'
 import Comment from './Comment'
 import { Drawer, DrawerContent, DrawerTitle } from './ui/drawer'
 import { IoMdClose } from 'react-icons/io'
-import { CommentType } from '@/pages/Comments'
 import { BsChatDots } from 'react-icons/bs'
 import { useNavigate } from 'react-router-dom'
 import { useGetCommentById } from '@/hooks/comments/useGetCommentById'
@@ -11,6 +10,7 @@ import useUser from '@/hooks/useUser'
 import CommentLoading from './CommentLoading'
 import { DialogDescription } from '@radix-ui/react-dialog'
 import { useSafeArea } from '@/context/SafeAreaContext'
+import { CommentType } from '@/types'
 
 type ProfileRepliesContainerType = {
     open: boolean;
@@ -61,7 +61,7 @@ const ProfileRepliesContainer = ({ open, setOpen, commentId }: ProfileRepliesCon
     return (
         <Drawer open={open} onOpenChange={() => setOpen(false)}>
             <DrawerContent
-                className="text-white h-4/5 bg-slate-800 border-0 outline-0"
+                className="text-white h-4/5 bg-slate-800 border-0 outline-0 md:max-w-[700px] mx-auto"
                 style={{ paddingBottom: `calc(${bottom}px + 5.2rem)` }}
                 aria-describedby="replies-container"
                 aria-description=""

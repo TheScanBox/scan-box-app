@@ -3,10 +3,11 @@ import { ScanResponse } from "../App";
 import Card from "./Card";
 import { Link } from "react-router-dom";
 import CardLoading from "./Loading/CardLoading";
+import { BookmarkScan, FavoriteScan } from "@/types";
 
 type CardsContainerProps = {
     title: string;
-    data?: ScanResponse[];
+    data?: ScanResponse[] | FavoriteScan[] | BookmarkScan[];
     id: string;
     loading: boolean;
     error: Error | null;

@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { AiFillEye, AiFillHeart, AiFillStar } from "react-icons/ai";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { AiFillEye, AiFillHeart, AiFillStar, AiOutlineCalendar } from "react-icons/ai";
 import { CiBookmark } from "react-icons/ci";
 import {
     IoMdArrowDropright,
@@ -9,16 +9,18 @@ import {
 } from "react-icons/io";
 import { BiCommentDetail } from "react-icons/bi";
 import {
-    openTelegramLink,
     cloudStorage,
-    exitFullscreen,
-    mountViewport,
+    shareURL,
     retrieveLaunchParams,
+    openPopup,
+    openTelegramLink,
 } from "@telegram-apps/sdk-react";
 import {
     IoShareSocial,
     IoStarOutline,
     IoNotificationsOff,
+    IoNotifications,
+    IoPlay,
 } from "react-icons/io5";
 import { GoAlert } from "react-icons/go";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -31,14 +33,17 @@ import { useSafeArea } from "@/context/SafeAreaContext";
 import ScanListHeader from "../components/ScanListHeader";
 import { useAlert } from "../context/AlertContext";
 import { createPortal } from "react-dom";
-import LoaderGif from "../assets/loader.gif";
 import StarRating from "../components/StarRating";
-import { debounce, get } from "lodash";
+import { debounce } from "lodash";
 import useRating from "../hooks/useRating";
 import Loading from "@/components/Loading";
 import { useUserScans } from "@/hooks/useUserScans";
 import { useGetLikedChapters } from "@/hooks/useGetLikedChapters";
 import useFetchChapters from "@/hooks/useFetchChapters";
+import useIncrementView from "@/hooks/useIncrementView";
+import useSubscription from "@/hooks/useSubscription";
+import UseGetReadChapters from "@/hooks/UseGetReadChapters";
+import TrailerView from "@/components/TrailerView";
 
 export type FavBookType = {
     img: string;
@@ -68,18 +73,17 @@ export const isObjectEmpty = (obj: Object | undefined) => {
 function ScanPreview() {
     const param = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
 
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
     const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
     const [openRatings, setOpenRatings] = useState(false);
+    const [openTrailer, setOpenTrailer] = useState(false);
 
     const [numChap, setNumChap] = useState(0);
-    const [totalPage, setTotalPage] = useState(0);
     const [savedChap, setSavedChap] = useState<number | null>(null);
-    const [isFavourite, setIsFavourite] = useState(false);
-    const [bookmark, setBookmark] = useState(false);
     const [numPages, setNumPages] = useState(0);
     const [currentPage, setCurrentPage] = useState(25);
     const [order, setOrder] = useState<"asc" | "desc">("desc");
@@ -93,13 +97,9 @@ function ScanPreview() {
     const user = tgWebAppData?.user;
 
     const { top, bottom } = useSafeArea();
-    const { loading: ratingLoading, rating, setRating } = useRating(
-        user?.id.toString()!,
-        param.id!
-    );
     const { showAlert } = useAlert();
 
-    const { getScanItem, updateState } = useUserScans()
+    const { getScanItem, addScan, deleteScan } = useUserScans()
 
     const fetchData = async () => {
         const { data, status } = await api.get(`/scans/${param.id}`);
@@ -120,10 +120,14 @@ function ScanPreview() {
     const { data: chapData, error: chapError, isFetching: chapFetching, isLoading: chapLoading, refetch } = useFetchChapters({
         id: param.id || "",
         parentId: param.parentId,
-        enabled: Boolean(param.id),
+        enabled: Boolean(param.id) && Boolean(data?.id),
     });
 
-    const { data: likedChapters } = useGetLikedChapters<LikeChapterType[]>(param.id || "")
+    const { loading: ratingLoading, rating, setRating } = useRating(user?.id.toString()!, param.id!, { enabled: Boolean(data?.id) });
+    const { subscription, isLoadingSubscription, createSubscription, isCreating, deleteSubscription, isDeleting } = useSubscription({ scanId: param.id });
+    const { data: likedChapters } = useGetLikedChapters<LikeChapterType[]>(param.id || "", { enabled: Boolean(data?.id) })
+    const { data: readChapters } = UseGetReadChapters(param.id || "", user?.id.toString() || "", { enabled: Boolean(data?.id) })
+    useIncrementView(param.id || "", { enabled: Boolean(data?.id) });
 
     // useEffect(() => {
     //     const exitFull = async () => {
@@ -146,7 +150,7 @@ function ScanPreview() {
 
             setNumChap(chapDataLength);
             setNumPages(Math.ceil(chapDataLength / 10));
-            setTotalPage(Math.ceil(chapDataLength / 10));
+            // setTotalPage(Math.ceil(chapDataLength / 10));
             setCurrentPage(Math.ceil(chapDataLength / 10));
             // setCurrentPage(1);
             setAllChapters(
@@ -202,6 +206,16 @@ function ScanPreview() {
         };
     }, []);
 
+    useEffect(() => {
+        const isTrailer = searchParams.get("trailer");
+
+        if (isTrailer === "true") {
+            setOpenTrailer(true);
+            searchParams.delete("trailer");
+        }
+
+    }, [searchParams]);
+
     const handleToggleMenu = () => {
         if (!open && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
@@ -239,84 +253,41 @@ function ScanPreview() {
     };
 
     const handleMarks = async (key: "favourites" | "bookmarks") => {
+        if (!data?.id) return;
+
         try {
-            // key == "bookmarks"
-            //     ? setBookmark(!bookmark)
-            //     : setIsFavourite(!isFavourite);
+            const itemInList = getScanItem(key, data.scanId);
 
-            // const result = (await cloudStorage.getItem(key)) as unknown as {
-            //     [index: string]: string;
-            // };
+            if (!itemInList) {
+                await addScan({
+                    type: key, data: {
+                        id: "", // will be set in the backend
+                        userId: user?.id.toString()!,
+                        scanId: data?.scanId,
+                        scanParentId: data?.scanParentId,
+                        scanPath: data?.scanPath,
+                        title: data?.title,
+                        stars: data?.stars,
+                        imgUrl: data?.imgUrl,
+                        createdAt: new Date().toISOString(),
+                    }
+                });
 
-            await updateState({
-                type: key,
-                data: {
-                    imgUrl: data?.imgUrl,
-                    title: data?.title,
-                    scanId: data?.scanId,
-                    scanParentId: data?.scanParentId,
-                    stars: data?.stars,
-                },
-            });
+                return;
+            }
 
-            // const item = {
-            //     imgUrl: data?.imgUrl,
-            //     title: data?.title,
-            //     scanId: data?.scanId,
-            //     scanParentId: data?.scanParentId,
-            //     stars: data?.stars,
-            // };
-
-            // if (!result || result[key] == "") {
-            //     await cloudStorage.setItem(key, JSON.stringify([item]));
-
-            //     return;
-            // }
-
-            // const bookmarksArr: Array<typeof item> = JSON.parse(result[key]);
-
-            // const isInList = bookmarksArr.find(
-            //     (el) => el.scanId == data?.scanId
-            // );
-
-            // const filterBookmarks = bookmarksArr.filter(
-            //     (result) => result.scanId != data?.scanId
-            // );
-
-            // if (isInList) {
-            //     await cloudStorage.setItem(
-            //         key,
-            //         JSON.stringify([...filterBookmarks])
-            //     );
-
-            //     return;
-            // }
-
-            // await cloudStorage.setItem(
-            //     key,
-            //     JSON.stringify([item, ...filterBookmarks])
-            // );
+            if (itemInList) {
+                await deleteScan({ type: key, scanId: data.scanId });
+                return;
+            }
         } catch (error) {
             console.log(error);
-
-            key == "bookmarks"
-                ? setBookmark(!bookmark)
-                : setIsFavourite(!isFavourite);
         }
     };
 
     const handleShare = () => {
         const APP_URL = import.meta.env.VITE_APP_URL;
-
-        openTelegramLink(
-            `https://t.me/share/url?text=${encodeURIComponent(
-                `Lisez les derniere chapitre de **${capitalize(
-                    data?.title || ""
-                )}** gratuitement !\n\n${data?.continuation &&
-                `**Chapitre apres l'anime : **${data.continuation}\n\n`
-                }${`${APP_URL}?startapp=read_${param.id}`}`
-            )}`
-        );
+        shareURL(`${APP_URL}?startapp=read_${param.id}`, `\nLisez les derniere chapitre de **${capitalize(data?.title || "")}** gratuitement !\n\n${data?.continuation && `**Chapitre apres l'anime : ${data.continuation}**`}`)
     };
 
     const handleRating = () => {
@@ -336,8 +307,33 @@ function ScanPreview() {
         setOpen(false);
     };
 
-    const handleSubscribe = () => {
-        alert("Bientôt disponible...");
+    const handleSubscribe = async () => {
+        if (isLoadingSubscription) return;
+
+        try {
+            if (!subscription) {
+                await createSubscription({ scanId: param.id || "", userId: user?.id.toString() || "" });
+                await openPopup({
+                    title: "Abonnement",
+                    message: "Vous êtes abonné avec succès ! Vous recevrez des notifications pour les nouveaux chapitres.",
+                    buttons: [{ type: "ok" }]
+                });
+            } else {
+                await deleteSubscription(subscription.id);
+                await openPopup({
+                    title: "Abonnement",
+                    message: "Vous vous êtes désabonné avec succès ! Vous ne recevrez plus de notifications pour les nouveaux chapitres.",
+                    buttons: [{ type: "ok" }]
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            await openPopup({
+                title: "Abonnement",
+                message: "Une erreur est survenue. Veuillez réessayer.",
+                buttons: [{ type: "ok" }]
+            });
+        }
 
         setOpen(false);
     };
@@ -362,7 +358,7 @@ function ScanPreview() {
         return (
             <Page>
                 <div
-                    className="p-3 space-y-4 animate-pulse w-full lg:max-w-[700px] mx-auto"
+                    className="p-3 space-y-4 animate-pulse w-full md:max-w-[700px] mx-auto"
                     style={{
                         marginTop: showAlert ? 0 : top,
                     }}
@@ -427,18 +423,27 @@ function ScanPreview() {
     return (
         <Page>
             <div
-                className="p-3 space-y-4 relative h-screen flex flex-col lg:max-w-[700px] mx-auto select-none"
+                className="py-3 space-y-4 relative h-screen flex flex-col md:max-w-[700px] mx-auto select-none"
                 style={{
                     marginTop: showAlert ? 0 : top,
                 }}
             >
-                <div className="w-full min-h-56 flex gap-2.5">
+                <div className="w-full min-h-56 flex gap-2.5 px-3">
                     <div
-                        className="h-full w-3/4 min-w-32 max-w-[150px] bg-cover bg-center"
+                        className="h-full w-3/4 min-w-32 max-w-[150px] bg-cover bg-center relative"
                         style={{
                             backgroundImage: `url(${data?.imgUrl})`,
                         }}
-                    />
+                    >
+                        <div className="">
+                            {data?.status && (
+                                <div
+                                    className={`absolute top-2 right-2 ${data.status == "Ongoing" ? "bg-red-600" : "bg-slate-600"} text-white text-[0.65rem] px-2 py-1 rounded-md`}>
+                                    {data.status == "Ongoing" ? "En cours" : data.status == "Completed" ? "Terminé" : data.status == "Hiatus" ? "Hiatus" : data.status == "Cancelled" ? "Annulé" : data.status}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="space-y-3 w-full overflow-x-hidden overflow-y-visible">
                         <div className="w-full">
@@ -462,6 +467,15 @@ function ScanPreview() {
                                 <AiFillEye />
                                 <span className="text-xs">N/A</span>
                             </p>
+
+                            {
+                                data.releasedYear && (
+                                    <p className="flex items-center gap-1 text-slate-400">
+                                        <AiOutlineCalendar />
+                                        <span className="text-xs">{data.releasedYear}</span>
+                                    </p>
+                                )
+                            }
                         </div>
 
                         <div className="flex items-center gap-3">
@@ -499,6 +513,20 @@ function ScanPreview() {
                             </button>
                         </div>
 
+                        {
+                            data.videoUrl && (
+                                <div>
+                                    <button
+                                        onClick={() => setOpenTrailer(true)}
+                                        className="flex items-center gap-2 cursor-pointer w-fit"
+                                    >
+                                        <IoPlay size={17} className="text-white bg-red-600 p-1 rounded-full" />
+                                        <span className="text-slate-400 text-sm underline underline-offset-2">Joue le trailer</span>
+                                    </button>
+                                </div>
+                            )
+                        }
+
                         {openRatings && (
                             <div>
                                 <StarRating
@@ -518,7 +546,7 @@ function ScanPreview() {
                                 top: `${menuPos.top}px`,
                                 right: `${menuPos.right}px`,
                             }}
-                            className="text-white text-sm bg-slate-700 absolute mt-4 w-36 rounded-md shadow-xl z-50"
+                            className="text-white text-sm bg-slate-700 absolute mt-4 w-40 rounded-md shadow-xl z-50"
                         >
                             <ul className="divide-y-[0.5px] divide-gray-500">
                                 <li
@@ -535,10 +563,14 @@ function ScanPreview() {
                                     onClick={handleSubscribe}
                                     className="px-3 py-2 flex gap-1.5 truncate items-center hover:bg-gray-500 cursor-pointer"
                                 >
-                                    <span>
-                                        <IoNotificationsOff size={17} />
-                                    </span>
-                                    Subscription
+                                    {
+                                        (isCreating || isDeleting || isLoadingSubscription) ? <Loading className="w-4 h-4 text-white" /> : (
+                                            <span>
+                                                {!subscription ? <IoNotifications size={17} /> : <IoNotificationsOff size={17} />}
+                                            </span>
+                                        )}
+
+                                    {isLoadingSubscription ? "Loading..." : !subscription ? "S'abonner" : "Se désabonner"}
                                 </li>
                                 <li className="px-3 py-2 hidden gap-1.5 truncate items-center hover:bg-gray-500 cursor-pointer">
                                     <span>
@@ -560,8 +592,8 @@ function ScanPreview() {
                         document.body
                     )}
 
-                <div className="space-y-4">
-                    <div className="text-white">
+                <div className="space-y-4 ">
+                    <div className="text-white px-3">
                         <h2 className="text-lg mb-2 font-bold">Synopsis</h2>
                         <p className="text-sm text-justify">
                             {readMore ? data.description : data.description.length > 200 ? `${data.description.slice(0, 200)}...` : data?.description}
@@ -579,9 +611,9 @@ function ScanPreview() {
 
                     {data?.continuation && (
                         <div>
-                            <p className="text-xs text-slate-300 lowercase">
-                                chapitre apres l'anime :{"  "}
-                                <span className="font-normal text-slate-300 text-xs">
+                            <p className="text-xs text-slate-300 bg-slate-900/60 px-3 py-2">
+                                Chapitre apres l'anime :{"  "}
+                                <span className="font-normal text-slate-300 text-xs lowercase">
                                     {data.continuation}
                                 </span>
                             </p>
@@ -589,7 +621,7 @@ function ScanPreview() {
                     )}
                 </div>
 
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap px-3">
                     {data?.tags?.map((tag, id) => (
                         <Tag key={id} name={tag.name} />
                     ))}
@@ -604,7 +636,7 @@ function ScanPreview() {
                     >
                         <Loading
                             loadingText="Chargement des chapitres..."
-                            className="w-4 h-4"
+                            className="w-5 h-5 text-slate-400"
                         />
                     </div>
                 )}
@@ -622,7 +654,7 @@ function ScanPreview() {
                             setOrder={setOrder}
                         />
 
-                        <div className={`flex flex-col gap-2`}>
+                        <div className={`flex flex-col`}>
                             {order == "desc"
                                 ? [...allChapters]
                                     .reverse()
@@ -648,6 +680,11 @@ function ScanPreview() {
                                                 }
                                                 img={data?.imgUrl}
                                                 name={data?.title}
+                                                isRead={readChapters?.findIndex(
+                                                    (chap) =>
+                                                        chap.chapterNumber ===
+                                                        Object.values(obj)[0]
+                                                ) !== -1}
                                                 isLiked={
                                                     likedChapters?.findIndex(
                                                         (chap) =>
@@ -681,6 +718,11 @@ function ScanPreview() {
                                                 }
                                                 img={data?.imgUrl}
                                                 name={data?.title}
+                                                isRead={readChapters?.findIndex(
+                                                    (chap) =>
+                                                        chap.chapterNumber ===
+                                                        Object.values(obj)[0]
+                                                ) !== -1}
                                                 isLiked={
                                                     likedChapters?.findIndex(
                                                         (chap) =>
@@ -767,7 +809,7 @@ function ScanPreview() {
                 )}
 
                 {(chapError || noData) && !chapFetching && (
-                    <div className="text-white flex flex-col justify-center items-center">
+                    <div className="text-white flex flex-col justify-center items-center px-3">
                         <ScanListHeader
                             numChap={numChap}
                             numPages={numPages}
@@ -793,6 +835,15 @@ function ScanPreview() {
                     </div>
                 )}
             </div>
+
+            {openTrailer && data.videoUrl && (
+                <TrailerView
+                    videoUrl={data.videoUrl}
+                    scanId={data.scanId}
+                    title={data.title}
+                    handleClose={() => setOpenTrailer(false)}
+                />
+            )}
         </Page>
     );
 }

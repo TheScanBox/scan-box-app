@@ -112,7 +112,7 @@ const ScanLectureControlsBottom = ({
                 paddingBottom: bottom ? bottom : "1rem",
             }}
             className={`${showControls ? "show-controls" : "hidden"
-                } w-full items-center justify-between text-white select-none font-light fixed bottom-0 bg-black/90 p-3 z-30`}
+                } w-full items-center justify-between text-white select-none font-light fixed bottom-0 bg-black/90 p-3 z-30 md:max-w-[700px]`}
         >
             <ScrollToTop visible={visible} handleScroll={handleScroll} />
             <p className="text-[10px] text-slate-400 hidden">

@@ -38,6 +38,9 @@ const Comments = React.lazy(() =>
 const User = React.lazy(() =>
     import("./pages").then((m) => ({ default: m.User }))
 );
+const Settings = React.lazy(() =>
+    import("./pages").then((m) => ({ default: m.Settings }))
+);
 
 const Scans = React.lazy(() =>
     import("./pages/tabs").then((m) => ({ default: m.Scans }))
@@ -51,7 +54,17 @@ const Subscriptions = React.lazy(() =>
     import("./pages/tabs").then((m) => ({ default: m.Subscriptions }))
 );
 
+const CommentSearch = React.lazy(() =>
+    import("./pages/search").then((m) => ({ default: m.CommentSearch }))
+);
 
+const ScanSearch = React.lazy(() =>
+    import("./pages/search").then((m) => ({ default: m.ScanSearch }))
+);
+
+const SubscriptionSearch = React.lazy(() =>
+    import("./pages/search").then((m) => ({ default: m.SubscriptionSearch }))
+);
 
 type StringData = {
     name: string;
@@ -73,12 +86,17 @@ export type ScanResponse = {
     author: StringData;
     tags: StringData[];
     specialChapters: { chap: number }[];
+    status: string;
+    latestChapter: number | null;
+    releasedYear: number | null;
+    videoUrl: string | null;
 
     createdAt: Date;
     updatedAt: Date;
 };
 
-const intervalMs = 300000;
+// const intervalMs = 300000;
+const intervalMs = 60000;
 
 function App() {
     const { tgWebAppData } = retrieveLaunchParams();
@@ -106,7 +124,15 @@ function App() {
                         <Route path="comments" element={<ProfileComments />} />
                         <Route path="subscriptions" element={<Subscriptions />} />
                     </Route>
-                    <Route path="user/:userId" element={<User />} />
+
+                    <Route path="search">
+                        <Route index element={<NotFound />} />
+                        <Route path="scans" element={<ScanSearch />} />
+                        <Route path="comments" element={<CommentSearch />} />
+                        <Route path="subscriptions" element={<SubscriptionSearch />} />
+                    </Route>
+
+                    <Route path="user/:refId" element={<User />} />
                     <Route path="more/:id" element={<More />} />
                     <Route path="tags/:id" element={<Tags />} />
                     <Route
@@ -118,7 +144,7 @@ function App() {
                         element={<ScanLecture />}
                     />
                     <Route path="comments/:scanId/:chapterNumber" element={<Comments />} />
-                    {/* <Route path="/profile/read/:id/:chapter" element={<ScanLecture />} /> */}
+                    <Route path="settings" element={<Settings />} />
                     <Route path="*" element={<NotFound />} />
                 </Routes>
             </Suspense>

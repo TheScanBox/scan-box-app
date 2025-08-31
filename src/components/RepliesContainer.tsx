@@ -6,7 +6,7 @@ import {
 import { IoMdClose } from "react-icons/io";
 import Comment from "./Comment"
 import CommentInput from "./CommentInput";
-import { CommentParamsType, CommentType } from "@/pages/Comments";
+import { CommentParamsType } from "@/pages/Comments";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import api from "@/libs/api";
 import { useParams } from "react-router-dom";
@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import { DialogDescription } from "@radix-ui/react-dialog";
 import { useSafeArea } from "@/context/SafeAreaContext";
+import { CommentType } from "@/types";
 
 type RepliesContainerType = {
     open: boolean;

@@ -1,5 +1,6 @@
 import {
     bindMiniAppCssVars,
+    closeMiniApp,
     init,
     isFullscreen,
     isTMA,
@@ -22,6 +23,7 @@ import axios from "axios";
 import { useAlert } from "../context/AlertContext";
 import api from "../libs/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/context/AuthContext";
 
 // init();
 // miniAppReady();
@@ -41,6 +43,7 @@ const loadingMessages = [
 
 const Auth = () => {
     const navigate = useNavigate();
+    const { setIsAuthenticated, setUser } = useAuth();
     const queryClient = useQueryClient();
 
     const hasAuthenticated = useRef(false);
@@ -65,10 +68,9 @@ const Auth = () => {
         hasAuthenticated.current = true;
 
         try {
-            const res = await axios.post(
-                `${import.meta.env.VITE_API_URL}/auth`,
+            const res = await api.post("/auth",
                 {
-                    userId: user?.id,
+                    userId: String(user?.id),
                     inviterID: command == "ref" ? payload : "",
                     username: user?.username || "",
                     firstName: user?.first_name || "",
@@ -97,22 +99,21 @@ const Auth = () => {
 
             sessionStorage.setItem("token", token);
 
+            setIsAuthenticated(true);
+            setUser(res.data.user);
+
             if (command == "read") {
                 if (chap) {
                     try {
-                        const { data, status } = await api.get(
+                        const { data } = await api.get(
                             `/scans/${payload}`
                         );
-
-                        if (status != 200) {
-                            throw new Error("Network response was not ok");
-                        }
 
                         queryClient.setQueryData([`scan_${payload}`], data);
 
                         const path = data.scanParentId
-                            ? `/read/${payload}/${chap}/${data.scanParentId}`
-                            : `/read/${payload}/${chap}`;
+                            ? `/read/${payload}/${chap}/${data.scanParentId}?source=auth`
+                            : `/read/${payload}/${chap}?source=auth`;
 
                         navigate(path, {
                             state: {
@@ -149,7 +150,7 @@ const Auth = () => {
                     parentId = data.scanParentId || "";
                 }
 
-                navigate(`/details/${payload}/${parentId}`, {
+                navigate(`/details/${payload}/${parentId}?source=auth`, {
                     replace: true,
                 });
 
@@ -162,7 +163,9 @@ const Auth = () => {
                 );
 
                 if (status != 200) {
-                    throw new Error("Network response was not ok");
+                    navigate(`/home`, {
+                        replace: true,
+                    });
                 }
 
                 queryClient.setQueryData([`scan_${payload}`], data);
@@ -192,6 +195,30 @@ const Auth = () => {
                 return;
             }
 
+            if (command == "profile") {
+                navigate(`/user/${payload}?source=auth`, {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (command == "trailer") {
+                const { data } = await api.get(
+                    `/scans/${payload}`
+                );
+
+                const path = `/details/${payload}/${data.scanParentId || ""}?source=auth&trailer=true`;
+
+                queryClient.setQueryData([`scan_${payload}`], data);
+
+                navigate(path, {
+                    replace: true,
+                });
+
+                return;
+            }
+
             navigate("/home", {
                 replace: true,
             });
@@ -201,6 +228,10 @@ const Auth = () => {
             await openPopup({
                 message: "Auth Failed. Veuillez reessayer plus tard.",
             });
+
+            if (closeMiniApp.isAvailable()) {
+                closeMiniApp();
+            }
         }
     };
 

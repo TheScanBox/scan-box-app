@@ -1,8 +1,9 @@
-import { cloudStorage } from "@telegram-apps/sdk-react";
 import { useState, useEffect } from "react";
 import { ScanImage } from "../components/ScanLoader";
 import { ScanResponse } from "../App";
 import { useUserScans } from "./useUserScans";
+import { RecentScan } from "@/types";
+import useUser from "./useUser";
 
 type StateType = {
     chapData:
@@ -39,7 +40,55 @@ const useFetchImages = ({
     const [loading, setLoading] = useState(true);
     const [chapterName, setChapterName] = useState<number>();
 
-    const { updateState } = useUserScans();
+    const user = useUser()
+    const { addScan, updateScan, getScanItem, data } = useUserScans(user?.id?.toString());
+
+    useEffect(() => {
+        const updateData = async () => {
+            if (!data) return;
+            if (!id) return;
+            if (!selectedChap) return;
+
+            const itemInList = getScanItem("recents", id) as RecentScan | undefined;
+
+            if (itemInList) {
+                if (itemInList.chapterNumber == parseInt(selectedChap)) return;
+                if (!chapterName) return;
+
+                await updateScan({
+                    type: "recents",
+                    data: {
+                        scanId: id,
+                        chapterNumber: parseInt(selectedChap),
+                        chapterName: chapterName?.toString() || "",
+                        lastReadAt: new Date().toISOString(),
+                    },
+                });
+                return;
+            }
+
+            if (!user?.id) return;
+
+            await addScan({
+                type: "recents",
+                data: {
+                    scanId: id,
+                    scanParentId: state.data.scanParentId,
+                    scanPath: state.data.scanPath,
+                    title: state.data.title,
+                    imgUrl: state.data.imgUrl,
+                    userId: String(user?.id),
+                    chapterNumber: parseInt(selectedChap),
+                    chapterName: chapterName?.toString() || "",
+                    lastReadAt: new Date().toISOString(),
+                    createdAt: new Date().toISOString(),
+                    stars: state.data.stars,
+                } as RecentScan,
+            })
+        };
+
+        updateData();
+    }, [data, selectedChap, id, chapterName, getScanItem, user?.id]);
 
     useEffect(() => {
         if (!state.allChapters && !allChapters) return;
@@ -49,23 +98,6 @@ const useFetchImages = ({
 
         const index = Number(selectedChap) - 1;
         const [chapName]: number[] = Object.values(all[index]);
-
-        const updateData = async () => {
-            await cloudStorage.setItem(`selectedChap-${id}`, selectedChap);
-
-            await updateState({
-                type: "recents",
-                data: {
-                    imgUrl: state.data?.imgUrl,
-                    title: state.data?.title,
-                    chap: selectedChap,
-                    chapName: chapName.toString() || "",
-                    scanId: state.data.scanId,
-                    scanParentId: state.data.scanParentId,
-                    scanPath: state.data.scanPath,
-                },
-            });
-        };
 
         let pages: ScanImage[] = [];
 
@@ -102,7 +134,6 @@ const useFetchImages = ({
         setImages(pages);
         setChapterName(chapName);
 
-        updateData();
     }, [selectedChap, state.data, chapData, allChapters]);
 
     return { loading, images, chapterName };

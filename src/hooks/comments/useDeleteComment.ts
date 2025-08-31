@@ -1,9 +1,9 @@
 // hooks/useDeleteComment.ts
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/libs/api';
-import { CommentType } from '@/pages/Comments';
 import useUser from '../useUser';
 import { openPopup } from '@telegram-apps/sdk-react';
+import { CommentType } from '@/types';
 
 const deleteCommentFromServer = async (commentId: string) => {
     const { status, data } = await api.delete(`/comments/${commentId}`)
@@ -27,7 +27,6 @@ export const useDeleteComment = (scanId: string, chapterNumber: string) => {
                     deletedComment.parentId ? ['replies', scanId, chapterNumber, deletedComment.parentId.toString()] : ['comments', scanId, chapterNumber],
                 (oldData: any | undefined) => {
                     if (!oldData) return oldData;
-                    console.log(variable.fromProfile, user?.id);
 
                     if (variable.fromProfile && deletedComment.parentId) {
                         queryClient.invalidateQueries({ queryKey: ["comment", deletedComment.parentId] });

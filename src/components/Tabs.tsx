@@ -8,7 +8,7 @@ const Tabs = () => {
 
     return (
         <div
-            className="flex justify-between items-center gap-1 overflow-x-auto no-scrollbar sticky z-50"
+            className="flex justify-between items-center gap-1 overflow-x-auto no-scrollbar sticky z-50 px-3"
             style={{
                 top: showAlert ? (top ? top + 45 : "4.5rem") : (top ? top : "1rem"),
             }}

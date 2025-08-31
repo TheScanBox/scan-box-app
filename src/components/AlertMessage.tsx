@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import axios from "axios";
 import useUser from "@/hooks/useUser";
+import api from "@/libs/api";
 
 const Text = ({ htmlText }: { htmlText: string }) => (
     <div dangerouslySetInnerHTML={{ __html: htmlText }} />
@@ -28,8 +29,8 @@ const AlertMessage = () => {
 
         const markAsSeen = async () => {
             try {
-                await axios.post(`${import.meta.env.VITE_API_URL}/alert/${alert.id}/seen`, {
-                    userId: user?.id
+                await api.post(`/alert/${alert.id}/seen`, {
+                    userId: String(user?.id)
                 });
             } catch (error) {
                 console.error("Failed to mark alert as seen:", error);

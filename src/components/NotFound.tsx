@@ -11,7 +11,7 @@ function NotFound() {
             <h1 className="text-2xl ">Page Not Found</h1>
             {/* {location.pathname} */}
             <button
-                className="text-slate-500 underline"
+                className="text-slate-500 underline cursor-pointer"
                 onClick={() => navigate("/home")}
             >
                 Back to Home

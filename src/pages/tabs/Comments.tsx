@@ -3,13 +3,13 @@ import { useGetCommentsByUserId } from "@/hooks/comments/useGetCommentsByUserId"
 import useUser from "@/hooks/useUser";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { CommentType } from "../Comments";
 import { MdSubdirectoryArrowRight } from "react-icons/md";
 import { formatDate } from "@/utils/dateFormat";
 import { IoMdThumbsDown, IoMdThumbsUp } from "react-icons/io";
 import ProfileRepliesContainer from "@/components/ProfileRepliesContainer";
 import { useSafeArea } from "@/context/SafeAreaContext";
 import { useLocation } from "react-router-dom";
+import { CommentType } from "@/types";
 
 type UserCommentType = {
     scan: {
@@ -57,7 +57,7 @@ const Comments = () => {
             <div className="flex flex-col justify-center items-center mt-2">
                 <Loading
                     loadingText="Chargement..."
-                    className="w-4 h-4"
+                    className="w-5 h-5"
                 />
             </div>
         );
@@ -80,13 +80,16 @@ const Comments = () => {
     if (comments?.pages.flat().length === 0 && search === "") {
         return (
             <div className="flex justify-center items-center">
-                <p className="text-xs text-center text-slate-400">Vous n'avez laissé aucun commentaire pour le moment. La liste de vos commentaires s'affichera ici.</p>
+                <p className="text-xs text-center text-slate-400 px-3">Vous n'avez laissé aucun commentaire pour le moment. La liste de vos commentaires s'affichera ici.</p>
             </div>
         );
     }
 
     return (
-        <div className="flex flex-col gap-4">
+        <div
+            className="flex flex-col gap-4 px-3"
+            style={{ paddingBottom: bottom + 16 }}
+        >
             {comments?.pages.flat().map((comment) => (
                 <div
                     key={comment.id}

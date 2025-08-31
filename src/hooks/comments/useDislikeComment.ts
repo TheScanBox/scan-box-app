@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/libs/api";
-import { CommentType } from "@/pages/Comments";
+import { CommentType } from "@/types";
 
 const likeCommentOnServer = async (commentId: string) => {
     const { data, status } = await api.post(`/comments/${commentId}/dislike`);

@@ -7,5 +7,6 @@ import Tags from "./Tags";
 import Profile from "./Profile";
 import Comments from "./Comments";
 import User from "./User";
+import Settings from "./Settings";
 
-export { Home, ScanPreview, ScanLecture, More, Auth, Tags, Profile, Comments, User };
+export { Home, ScanPreview, ScanLecture, More, Auth, Tags, Profile, Comments, User, Settings };

@@ -1,7 +1,7 @@
 import api from "@/libs/api";
 import { useQuery } from "@tanstack/react-query"
 
-export const useGetLikedChapters = <T>(scanId: string | undefined) => {
+export const useGetLikedChapters = <T>(scanId: string | undefined, { enabled }: { enabled: boolean }) => {
     return useQuery<T>({
         queryKey: ["likedChapters", scanId],
         queryFn: async () => {
@@ -14,7 +14,7 @@ export const useGetLikedChapters = <T>(scanId: string | undefined) => {
             return data;
         },
         staleTime: Infinity, // 5 minutes
-        enabled: Boolean(scanId)
+        enabled: Boolean(scanId) && enabled,
     });
 
 }

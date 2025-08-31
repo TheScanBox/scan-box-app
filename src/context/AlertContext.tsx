@@ -7,6 +7,7 @@ import {
 } from "react";
 import axios from "axios";
 import useUser from "@/hooks/useUser";
+import api from "@/libs/api";
 
 type Alert = {
     id: string;
@@ -37,7 +38,7 @@ export const AlertContextProvider = ({ children }: { children: ReactNode }) => {
             if (!user?.id) return;
 
             try {
-                const { data, status } = await axios.get(`${import.meta.env.VITE_API_URL}/alert?userId=${user?.id}`);
+                const { data, status } = await api.get(`/alert?userId=${user?.id}`);
 
                 if (status !== 200) return;
 

@@ -3,7 +3,7 @@ import api from "../libs/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { openPopup } from "@telegram-apps/sdk-react";
 
-const useRating = (userId: string, scanId: string) => {
+const useRating = (userId: string, scanId: string, { enabled }: { enabled: boolean }) => {
     const queryClient = useQueryClient();
 
     const query = useQuery({
@@ -17,7 +17,7 @@ const useRating = (userId: string, scanId: string) => {
 
             return data.rating.value;
         },
-        enabled: !!userId && !!scanId,
+        enabled: !!userId && !!scanId && enabled,
         staleTime: Infinity
     });
 

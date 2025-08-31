@@ -16,6 +16,8 @@ import ScanLoader from "../components/ScanLoader";
 import useFetchImages from "../hooks/useFetchImages";
 import useFetchSpecialChapters from "@/hooks/useFetchSpecialChapters";
 import useFetchChapters from "@/hooks/useFetchChapters";
+import api from "@/libs/api";
+import { useQueryClient } from "@tanstack/react-query";
 
 export type StateType = {
     chapData: { [index: string]: number } | undefined;
@@ -30,6 +32,7 @@ function ScanLecture() {
         parentId?: string;
     };
     const location = useLocation();
+    const queryClient = useQueryClient();
 
     const [error, setError] = useState(false);
     const [showControls, setShowControls] = useState(true);
@@ -40,6 +43,7 @@ function ScanLecture() {
         useState<{ [index: string]: number }[]>();
 
     const scrollRef = useRef<HTMLDivElement | null>(null);
+    const hasMarkedRef = useRef(false);
     // const hasMounted = useRef(false);
 
     const [visible, setVisible] = useState(false);
@@ -82,6 +86,20 @@ function ScanLecture() {
             behavior: "smooth",
         });
     };
+
+    const markChapterAsRead = async () => {
+        try {
+            await api.post("/read-chapter/mark-as-read", {
+                scanId: param.id,
+                chapterNumber: parseInt(selectedChap)
+            });
+
+            queryClient.invalidateQueries({ queryKey: ['readChapters', param.id] });
+        } catch (error) {
+            console.error("Error marking chapter as read:", error);
+            // Handle error (e.g., show a notification)
+        }
+    }
 
     const {
         data: chapData,
@@ -126,6 +144,23 @@ function ScanLecture() {
         return () =>
             document.removeEventListener("scroll", updateScrollProgress);
     }, []);
+
+    useEffect(() => {
+        if (loading) return;
+        if (isLoading) return;
+        if (specialChaptersLoading) return;
+        if (notFound) return;
+        if (scrollProgress < 90) return;
+
+        if (!hasMarkedRef.current) {
+            hasMarkedRef.current = true;
+            markChapterAsRead();
+        }
+    }, [scrollProgress]);
+
+    useEffect(() => {
+        hasMarkedRef.current = false;
+    }, [selectedChap]);
 
     useEffect(() => {
         if (state?.allChapters || !specialChapters) return;
@@ -207,7 +242,7 @@ function ScanLecture() {
         <Page>
             <section
                 ref={scrollRef}
-                className="relative w-full lg:max-w-[700px] mx-auto select-none"
+                className="relative w-full md:max-w-[700px] mx-auto select-none"
             >
                 <ScanLectureControls
                     numChap={Object.keys(state?.chapData || chapData).length}

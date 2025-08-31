@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     Banner,
     CardsContainer,
@@ -16,6 +16,8 @@ import api from "../libs/api";
 import { debounce } from "lodash";
 import { useAlert } from "../context/AlertContext";
 import { useSafeArea } from "@/context/SafeAreaContext";
+import { cloudStorage } from "@telegram-apps/sdk-react";
+import useUser from "@/hooks/useUser";
 
 function Home() {
     const [search, setSearch] = useState("");
@@ -23,6 +25,7 @@ function Home() {
 
     const { top, bottom } = useSafeArea();
     const { showAlert } = useAlert();
+    const user = useUser();
 
     const debouncedSearch = debounce((query) => {
         setDebouncedSearchTerm(query);
@@ -75,6 +78,74 @@ function Home() {
         staleTime: 300000,
     });
 
+    useEffect(() => {
+        const updateUserScan = async () => {
+            const updateCompleted = await cloudStorage.getItem("updateCompleted") as unknown as { updateCompleted: string } | null;
+            const parseUpdateCompleted = updateCompleted ? JSON.parse(updateCompleted.updateCompleted) : false;
+
+            if (parseUpdateCompleted) {
+                console.log("Update already completed, skipping.");
+                return;
+            }
+
+            try {
+                const recent = await cloudStorage.getItem("recents") as unknown as { recents: string } | null;
+                const favourites = await cloudStorage.getItem("favourites") as unknown as { favourites: string } | null;
+                const bookmarks = await cloudStorage.getItem("bookmarks") as unknown as { bookmarks: string } | null;
+
+                const parsedRecents = recent ? JSON.parse(recent.recents) : [];
+                const parsedFavourites = favourites ? JSON.parse(favourites.favourites) : [];
+                const parsedBookmarks = bookmarks ? JSON.parse(bookmarks.bookmarks) : [];
+
+                const userId = user?.id.toString() || "";
+
+                if (!userId) {
+                    console.log("User ID not found, cannot update scans.");
+                    return;
+                }
+
+                console.log("Parsed Recents:", parsedRecents);
+
+                const recentScanPromises = parsedRecents.map((item: any) => {
+                    return api.post('/readscan', {
+                        userId: userId,
+                        scanId: item.scanId,
+                        chapterNumber: Number(item.chap),
+                        chapterName: item.chapName,
+                    });
+                });
+
+                const favouriteScanPromises = parsedFavourites.map((item: any) => {
+                    return api.post('/favorite', {
+                        userId: userId,
+                        scanId: item.scanId,
+                    });
+                });
+
+                const bookmarkScanPromises = parsedBookmarks.map((item: any) => {
+                    return api.post('/bookmark', {
+                        userId: userId,
+                        scanId: item.scanId,
+                    });
+                });
+
+                await Promise.all([
+                    ...recentScanPromises,
+                    ...favouriteScanPromises,
+                    ...bookmarkScanPromises
+                ]);
+
+                await cloudStorage.setItem("updateCompleted", JSON.stringify(true));
+
+                console.log("User scans updated successfully");
+            } catch (error) {
+                console.error("Error fetching user scan:", error);
+            }
+        };
+
+        updateUserScan();
+    }, [user]);
+
     if (recentLoading) {
         return <HomeLoading />;
     }
@@ -99,7 +170,7 @@ function Home() {
         <Page back={false}>
             {/* <AlertMessage /> */}
             <section
-                className="relative lg:max-w-[700px] mx-auto"
+                className="relative md:max-w-[700px] mx-auto"
                 style={{
                     marginTop: showAlert ? 0 : top,
                     marginBottom: bottom,

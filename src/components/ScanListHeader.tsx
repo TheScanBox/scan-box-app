@@ -19,7 +19,7 @@ const ScanListHeader = ({
 }: ScanListHeaderType) => {
     const totalChapters = numChap - specialChaptersLength;
     return (
-        <div className="text-slate-300 flex justify-between items-center w-full">
+        <div className="text-slate-300 flex justify-between items-center w-full px-3">
             <h1 className="text-sm">
                 Chapitres - {totalChapters < 0 ? 0 : totalChapters}
             </h1>

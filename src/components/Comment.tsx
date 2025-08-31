@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BsThreeDotsVertical, BsHandThumbsDownFill, BsHandThumbsUpFill } from "react-icons/bs";
 import { IoMdThumbsUp, IoMdThumbsDown } from "react-icons/io";
-import { CommentParamsType, CommentType } from "../pages/Comments";
+import { CommentParamsType } from "../pages/Comments";
 import { formatDate } from "@/utils/dateFormat";
 import useUser from "@/hooks/useUser";
 import api from "@/libs/api";
@@ -10,6 +10,7 @@ import { useParams } from "react-router-dom";
 import { useLikeComment } from "@/hooks/comments/useLikeComment";
 import { useDislikeComment } from "@/hooks/comments/useDislikeComment";
 import { openPopup } from "@telegram-apps/sdk-react";
+import { CommentType } from "@/types";
 
 type CommentProps = {
     handleOpenReplies?: (commentId: string) => void

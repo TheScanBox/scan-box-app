@@ -12,47 +12,15 @@ import api from "@/libs/api";
 import { useInView } from "react-intersection-observer";
 import CommentLoading from "@/components/CommentLoading";
 import { IoMdShareAlt } from "react-icons/io";
-import { openTelegramLink } from "@telegram-apps/sdk-react";
+import { shareURL } from "@telegram-apps/sdk-react";
 import { capitalize } from "./ScanPreview";
 import { FaBookOpenReader } from "react-icons/fa6";
-
-type UserType = {
-    id: number;
-    name: string;
-    avatar?: string;
-};
+import { CommentType } from "@/types";
 
 export type CommentParamsType = {
     scanId: string,
     chapterNumber: string
 }
-
-export type CommentType = {
-    id: string;
-    scanId?: string;
-    user: UserType;
-    date: string;
-    content: string;
-    repliesCount?: number;
-    likesCount?: number;
-    dislikesCount?: number;
-    isLiked?: boolean;
-    isDisliked?: boolean;
-    isReply?: boolean
-    parentId?: string | null;
-    chapterNumber?: number
-    createdAt?: string;
-    updatedAt?: string
-    replies?: CommentType[];
-    scan?: {
-        id: string;
-        title: string;
-        scanId: string;
-        scanParentId?: string;
-        imgUrl: string;
-        scanPath: string;
-    }
-};
 
 type CategoryType = "Top" | "Newest";
 
@@ -164,14 +132,7 @@ const Comments = () => {
 
     const handleCopy = () => {
         const APP_URL = import.meta.env.VITE_APP_URL;
-
-        openTelegramLink(
-            `https://t.me/share/url?text=${encodeURIComponent(
-                `Lisez les commentaires du Chapitre ${params.chapterNumber} de **${capitalize(
-                    state.scan?.title || state.currentState?.data.title || "Unknown"
-                )}** !\n\n${`${APP_URL}?startapp=comment_${params.scanId}_${params.chapterNumber}`}`
-            )}`
-        );
+        shareURL(`${APP_URL}?startapp=comment_${params.scanId}_${params.chapterNumber}`, `Lisez les commentaires du Chapitre ${params.chapterNumber} de **${capitalize(state.scan?.title || state.currentState?.data.title || "Unknown")}** !\n\n`);
     };
 
     const handleRead = () => {
@@ -205,7 +166,7 @@ const Comments = () => {
         return (
             <Page>
                 <div
-                    className="flex flex-col"
+                    className="flex flex-col md:max-w-[700px] mx-auto"
                     style={{
                         marginTop: showAlert ? 0 : top,
                         paddingBottom: `calc(${bottom}px + 4rem)`,
@@ -254,7 +215,7 @@ const Comments = () => {
     return (
         <Page>
             <div
-                className="flex flex-col"
+                className="flex flex-col md:max-w-[700px] mx-auto"
                 style={{
                     marginTop: showAlert ? 0 : top,
                     paddingBottom: `calc(${bottom}px + 4rem)`,

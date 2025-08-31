@@ -75,7 +75,7 @@ function SearchScreen({ debouncedSearchText }: SearchScreenProps) {
                     <p
                         onClick={() =>
                             openTelegramLink(
-                                "https://t.me/TheScanBoxSupportBot?start=utm_app"
+                                "https://t.me/TheScanBoxSupportBot?start=demande"
                             )
                         }
                         className="text-xs text-red-400 mt-1 underline cursor-pointer hover:opacity-50"

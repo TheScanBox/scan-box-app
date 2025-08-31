@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/libs/api";
-import { CommentType } from "@/pages/Comments";
+import { CommentType } from "@/types";
 
 const updateCommentOnServer = async ({
     commentId,

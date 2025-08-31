@@ -92,7 +92,7 @@ const Tags = () => {
     return (
         <Page>
             <section
-                className="p-3 lg:max-w-[700px] mx-auto"
+                className="p-3 md:max-w-[700px] mx-auto"
                 style={{
                     marginTop: showAlert ? 0 : top,
                 }}
@@ -115,7 +115,6 @@ const Tags = () => {
                                     stars={scan.stars}
                                     parentId={scan.scanParentId}
                                     title={scan.title}
-                                    helpPath="../"
                                     isMore={true}
                                 />
                             ))}

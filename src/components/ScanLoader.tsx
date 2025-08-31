@@ -195,7 +195,7 @@ const ScanLoader = ({
 
             {loading && !pageLoading && (
                 <div className="flex gap-2 py-3 flex-col justify-center items-center overflow-y-hidden">
-                    <Loading loadingText="Chargement..." className="h-6 w-6" />
+                    <Loading loadingText="Chargement..." className="h-6 w-6 text-white" />
                 </div>
             )}
         </div>

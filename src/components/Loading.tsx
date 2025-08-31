@@ -8,9 +8,9 @@ type LoadingProps = {
 const Loading = ({ className, loadingText }: LoadingProps) => {
     return (
         <div className={`flex flex-col items-center gap-3 justify-center`}>
-            <div className="rounded-full opacity-90">
+            <div className="rounded-full">
                 <svg
-                    className={`h-6 w-6 text-slate-400 animate-spin-slow ${className}`}
+                    className={`animate-spin-slow ${className || 'h-6 w-6 text-slate-400'}`}
                     viewBox="0 0 36 36"
                     fill="none"
                 >

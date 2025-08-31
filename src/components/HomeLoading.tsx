@@ -10,7 +10,7 @@ function HomeLoading() {
 
     return (
         <section
-            className="relative"
+            className="relative md:max-w-[700px] mx-auto"
             style={{
                 marginTop: showAlert ? 0 : top,
             }}

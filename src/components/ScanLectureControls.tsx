@@ -1,6 +1,6 @@
 import { IoIosArrowForward, IoMdShareAlt, IoMdSunny } from "react-icons/io";
 import { useSafeArea } from "@/context/SafeAreaContext";
-import { openTelegramLink } from "@telegram-apps/sdk-react";
+import { shareURL } from "@telegram-apps/sdk-react";
 import { capitalize } from "../pages/ScanPreview";
 import { useAlert } from "../context/AlertContext";
 
@@ -28,14 +28,7 @@ function ScanLectureControls({
 
     const handleCopy = () => {
         const APP_URL = import.meta.env.VITE_APP_URL;
-
-        openTelegramLink(
-            `https://t.me/share/url?text=${encodeURIComponent(
-                `Lisez le Chapitre ${selectedChapName} de **${capitalize(
-                    title
-                )}** !\n\n${`${APP_URL}?startapp=read_${scanID}_${selectedChap}`}`
-            )}`
-        );
+        shareURL(`${APP_URL}?startapp=read_${scanID}_${selectedChap}`, `\nLisez le Chapitre ${selectedChapName} de **${capitalize(title)}** !`)
     };
 
     // const fullScreen = async () => {
@@ -58,7 +51,7 @@ function ScanLectureControls({
     return (
         <div
             className={`${showControls ? "show-controls" : "hidden"
-                } w-full text-white font-light select-none fixed bg-black/90 p-3 z-30 flex items-center justify-between`}
+                } w-full text-white font-light select-none fixed bg-black/90 p-3 z-30 flex items-center justify-between md:max-w-[700px]`}
             style={{
                 paddingTop: top ? (showAlert ? 10 : top) : "1rem",
             }}

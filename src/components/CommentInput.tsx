@@ -78,7 +78,7 @@ const CommentInput = ({ isEdit = false, commentId, editCommentId, setEditComment
 
     return (
         <div
-            className="fixed bottom-0 z-20 w-full flex flex-col  px-4 py-3 bg-slate-950"
+            className="fixed bottom-0 z-20 w-full md:max-w-[700px] flex flex-col  px-4 py-3 bg-slate-950"
             style={{ paddingBottom: isFocused ? "1rem" : bottom ? bottom : "1rem" }}
         >
             {isReply && <p className="text-slate-300 text-xs mb-2">Replying to {authorName}</p>}

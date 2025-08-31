@@ -2,29 +2,25 @@ import { ScanResponse } from "@/App";
 import Card from "@/components/Card";
 import Loading from "@/components/Loading";
 import { useSafeArea } from "@/context/SafeAreaContext";
+import useUser from "@/hooks/useUser";
 import { ScanType, useUserScans } from "@/hooks/useUserScans";
+import { RecentScan } from "@/types";
+import { formatDate } from "@/utils/dateFormat";
 import { isPopupOpened, openPopup } from "@telegram-apps/sdk-react";
 import { IoIosTrash } from "react-icons/io";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useNavigate } from "react-router-dom";
 
-type Recent = Partial<ScanResponse> & { chap: string; chapName: string };
+// fix chapterNumber type to also include special chapters
 
-type Fav = Omit<Recent, "chap">;
-
-export type UserScansData = {
-    favourites: Fav[];
-    bookmarks: Fav[];
-    recents: Recent[];
-};
-
-const RecentCard = ({ item, handleRead, onDelete }: {
-    item: Recent;
-    handleRead: (data: Recent) => void;
+export const RecentCard = ({ item, handleRead, onDelete, isProfile = true }: {
+    item: RecentScan;
+    handleRead: (data: RecentScan, isProfile: boolean) => void;
+    isProfile?: boolean;
     onDelete?: () => void;
 }) => (
     <div
-        onClick={() => handleRead(item)}
+        onClick={() => handleRead(item, isProfile)}
         className={`flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer`}
     >
         <div className="w-full h-40 relative">
@@ -35,7 +31,7 @@ const RecentCard = ({ item, handleRead, onDelete }: {
                 placeholder={<div className="w-full h-full bg-slate-400 animate-pulse" />}
             />
             <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
-            <div
+            {isProfile && <div
                 className="absolute top-2 right-2 z-20 hover:text-red-700"
                 onClick={async (e) => {
                     e.stopPropagation();
@@ -43,25 +39,26 @@ const RecentCard = ({ item, handleRead, onDelete }: {
                 }}
             >
                 <IoIosTrash size={20} />
-            </div>
+            </div>}
         </div>
         <div className="space-y-1">
             <p className="text-xs truncate capitalize">{item.title}</p>
-            <p className="text-[0.6rem] truncate text-slate-400">CH {item?.chapName || item.chap}</p>
+            <p className="text-[0.6rem] truncate text-slate-400">CH {item.chapterName}</p>
+            {isProfile && item.lastReadAt && <p className="text-[0.6rem] truncate text-slate-400">{formatDate(item.lastReadAt)}</p>}
         </div>
     </div>
 );
 
 const Scans = () => {
     const navigate = useNavigate();
-    const { top, bottom } = useSafeArea();
+    const { bottom } = useSafeArea();
+    const user = useUser();
+    const { isLoading, isError, data, refetch, deleteScan } = useUserScans(user?.id.toString());
 
-    const { isLoading, isError, data, refetch, updateState } = useUserScans()
-
-    const handleRead = (data: Recent) => {
+    const handleRead = (data: RecentScan) => {
         const path = data.scanParentId
-            ? `../read/${data.scanId}/${data.chap}/${data.scanParentId}`
-            : `../read/${data.scanId}/${data.chap}`;
+            ? `../read/${data.scanId}/${data.chapterNumber}/${data.scanParentId}`
+            : `../read/${data.scanId}/${data.chapterNumber}`;
 
         navigate(path, {
             state: {
@@ -91,13 +88,7 @@ const Scans = () => {
         if (result != "delete") return;
         if (!type) return;
 
-        await updateState({
-            type,
-            data: {
-                scanId: id,
-                delete: true
-            }
-        })
+        await deleteScan({ type, scanId: id });
     };
 
     if (isLoading) {
@@ -105,7 +96,7 @@ const Scans = () => {
             <div className="flex flex-col justify-center items-center mt-2">
                 <Loading
                     loadingText="Chargement..."
-                    className="w-4 h-4"
+                    className="w-5 h-5"
                 />
             </div>
         )
@@ -129,9 +120,9 @@ const Scans = () => {
 
     return (
         <div
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-6 px-3"
             style={{
-                paddingBottom: bottom,
+                paddingBottom: bottom + 16,
             }}
         >
             {
@@ -184,7 +175,6 @@ const Scans = () => {
                                         imgUrl={item.imgUrl!}
                                         title={item.title!}
                                         stars={item.stars}
-                                        helpPath="../"
                                         isProfile={true}
                                         type="favourites"
                                         onDelete={() => handleDelete(item.title!, "favourites", item.scanId!)}
@@ -218,7 +208,6 @@ const Scans = () => {
                                             item.scanParentId || ""
                                         }
                                         stars={item.stars}
-                                        helpPath="../"
                                         isProfile={true}
                                         type="bookmarks"
                                         onDelete={() => handleDelete(item.title!, "bookmarks", item.scanId!)}
@@ -232,7 +221,7 @@ const Scans = () => {
             {
                 !recents.length && !favourites.length && !bookmarks.length && (
                     <div>
-                        <p className="text-xs w-full text-center text-slate-500">
+                        <p className="text-xs w-full text-center text-slate-400 px-3">
                             Continuez à explorer l'application.
                             Votre contenu favori apparaîtra ici.
                         </p>

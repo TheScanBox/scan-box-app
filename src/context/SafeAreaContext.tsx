@@ -20,7 +20,7 @@ export const SafeAreaProvider = ({ children }: { children: React.ReactNode }) =>
         const safeTop = top + contentTop;
         const safeBottom = bottom + contentBottom;
 
-        if (safeTop == 0) {
+        if (safeTop == 0 || safeBottom == 0) {
             const data = sessionStorage.getItem("safearea");
 
             if (!data) return;

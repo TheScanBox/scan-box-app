@@ -17,9 +17,9 @@ type CardProps = {
     imgUrl: string;
     title: string;
     stars?: number | string;
-    helpPath?: string;
     isMore?: boolean;
     isProfile?: boolean;
+    isUser?: boolean;
     type?: "favourites" | "bookmarks";
     onDelete?: () => void
 };
@@ -30,8 +30,8 @@ function Card({
     stars,
     id,
     parentId,
-    helpPath,
     isMore = false,
+    isUser = false,
     isProfile,
     onDelete
 }: CardProps) {
@@ -42,7 +42,7 @@ function Card({
             className={`active:opacity-5 cursor-pointer ${isMore ? "w-full flex-1" : "min-w-32 w-32"}`}
             onClick={() =>
                 navigate(
-                    `${helpPath ? helpPath : ""}../details/${id}/${parentId}`
+                    `/details/${id}/${parentId}${isUser ? "?source=user" : ""}`,
                 )
             }
         >
