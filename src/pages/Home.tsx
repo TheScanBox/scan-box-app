@@ -104,8 +104,6 @@ function Home() {
                     return;
                 }
 
-                console.log("Parsed Recents:", parsedRecents);
-
                 const recentScanPromises = parsedRecents.map((item: any) => {
                     return api.post('/readscan', {
                         userId: userId,
@@ -129,10 +127,10 @@ function Home() {
                     });
                 });
 
-                await Promise.all([
+                await Promise.allSettled([
                     ...recentScanPromises,
                     ...favouriteScanPromises,
-                    ...bookmarkScanPromises
+                    ...bookmarkScanPromises,
                 ]);
 
                 await cloudStorage.setItem("updateCompleted", JSON.stringify(true));
