@@ -81,9 +81,8 @@ function Home() {
     useEffect(() => {
         const updateUserScan = async () => {
             const updateCompleted = await cloudStorage.getItem("updateCompleted") as unknown as { updateCompleted: string } | null;
-            const parseUpdateCompleted = updateCompleted ? JSON.parse(updateCompleted.updateCompleted) : false;
 
-            if (parseUpdateCompleted) {
+            if (updateCompleted && updateCompleted.updateCompleted === "true") {
                 console.log("Update already completed, skipping.");
                 return;
             }
@@ -93,9 +92,9 @@ function Home() {
                 const favourites = await cloudStorage.getItem("favourites") as unknown as { favourites: string } | null;
                 const bookmarks = await cloudStorage.getItem("bookmarks") as unknown as { bookmarks: string } | null;
 
-                const parsedRecents = recent ? JSON.parse(recent.recents) : [];
-                const parsedFavourites = favourites ? JSON.parse(favourites.favourites) : [];
-                const parsedBookmarks = bookmarks ? JSON.parse(bookmarks.bookmarks) : [];
+                const parsedRecents = recent && recent.recents ? JSON.parse(recent.recents) : [];
+                const parsedFavourites = favourites && favourites.favourites ? JSON.parse(favourites.favourites) : [];
+                const parsedBookmarks = bookmarks && bookmarks.bookmarks ? JSON.parse(bookmarks.bookmarks) : [];
 
                 const userId = user?.id.toString() || "";
 

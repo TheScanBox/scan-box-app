@@ -50,7 +50,7 @@ export const useUserScans = (userId?: string) => {
     const queryClient = useQueryClient();
 
     const query = useQuery<UserScansData>({
-        queryKey: ["userScans"],
+        queryKey: ["userScans", userId],
         queryFn: async (): Promise<UserScansData> => {
             // const favResults = await cloudStorage.getItem("favourites") as unknown as Record<string, string>;
             const favoriteResponse = api.get<FavoriteScan[]>(`/favorite${userId ? `?userId=${userId}` : ""}`)
@@ -80,7 +80,7 @@ export const useUserScans = (userId?: string) => {
     const addMutation = useMutation({
         mutationFn: async ({ type, data }: UpdateScanPayload) => addScanItem(type, data),
         onMutate: async ({ type, data }) => {
-            const queryKey = ["userScans"];
+            const queryKey = ["userScans", userId];
             await queryClient.cancelQueries({ queryKey });
 
             const previousData = queryClient.getQueryData<UserScansData>(queryKey);
@@ -108,7 +108,7 @@ export const useUserScans = (userId?: string) => {
     const updateMutation = useMutation({
         mutationFn: async ({ type, data }: { type: ScanType, data: any }) => updateScanItem(type, data),
         onMutate: async ({ type, data }) => {
-            const queryKey = ["userScans"];
+            const queryKey = ["userScans", userId];
             await queryClient.cancelQueries({ queryKey });
 
             const previousData = queryClient.getQueryData<UserScansData>(queryKey);
@@ -138,7 +138,7 @@ export const useUserScans = (userId?: string) => {
     const deleteMutation = useMutation({
         mutationFn: async ({ type, scanId }: { type: ScanType, scanId: string }) => deleteScanItem(type, scanId),
         onMutate: async ({ type, scanId }) => {
-            const queryKey = ["userScans"];
+            const queryKey = ["userScans", userId];
             await queryClient.cancelQueries({ queryKey });
 
             const previousData = queryClient.getQueryData<UserScansData>(queryKey);

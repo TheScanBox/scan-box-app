@@ -99,7 +99,7 @@ function ScanPreview() {
     const { top, bottom } = useSafeArea();
     const { showAlert } = useAlert();
 
-    const { getScanItem, addScan, deleteScan } = useUserScans()
+    const { getScanItem, addScan, deleteScan } = useUserScans(user?.id.toString() || "");
 
     const fetchData = async () => {
         const { data, status } = await api.get(`/scans/${param.id}`);

@@ -137,15 +137,17 @@ const Scans = () => {
                                     Nothing yet
                                 </p>
                             ) : (
-                                recents.map((item, index) => (
-                                    <RecentCard
-                                        key={index}
-                                        item={item}
-                                        handleRead={handleRead}
-                                        onDelete={() => handleDelete(item.title!, "recents", item.scanId!)}
-                                    />
-                                )
-                                )
+                                recents
+                                    .sort((a, b) => new Date(b.lastReadAt!).getTime() - new Date(a.lastReadAt!).getTime())
+                                    .map((item, index) => (
+                                        <RecentCard
+                                            key={index}
+                                            item={item}
+                                            handleRead={handleRead}
+                                            onDelete={() => handleDelete(item.title!, "recents", item.scanId!)}
+                                        />
+                                    )
+                                    )
                             )}
                         </div>
                     </div>

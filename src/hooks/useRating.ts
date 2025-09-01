@@ -35,18 +35,20 @@ const useRating = (userId: string, scanId: string, { enabled }: { enabled: boole
 
             return data.rating.value;
         },
-        onSuccess: (data) => {
-            queryClient.setQueryData(
-                ["rating", userId, scanId],
-                (oldData: any) => {
-                    if (!oldData) return oldData
+        onMutate: async (newRating: string) => {
+            await queryClient.cancelQueries({ queryKey: ["rating", userId, scanId] });
 
-                    return data;
-                }
-            )
+            const previousRating = queryClient.getQueryData<number>(["rating", userId, scanId]);
 
+            queryClient.setQueryData<number>(["rating", userId, scanId], parseFloat(newRating));
+
+            return { previousRating };
         },
-        onError: () => {
+        onError: (_error, _newRating, context) => {
+            if (context?.previousRating !== undefined) {
+                queryClient.setQueryData(["rating", userId, scanId], context.previousRating);
+            }
+
             openPopup({
                 message: "Failed to update rating. Please try again later.",
             });
