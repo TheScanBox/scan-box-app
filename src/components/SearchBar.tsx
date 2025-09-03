@@ -27,9 +27,8 @@ function SearchBar({ search, handleSearch, setSearch }: SearchBarProps) {
 
                 <div
                     onClick={() => setSearch("")}
-                    className={`${
-                        search ? "flex" : "hidden"
-                    } absolute right-3 h-full flex-col justify-center items-center w-4 cursor-pointer`}
+                    className={`${search ? "flex" : "hidden"
+                        } absolute right-3 h-full flex-col justify-center items-center w-4 cursor-pointer`}
                 >
                     <img src="./close.svg" alt="close-btn" />
                 </div>
@@ -42,7 +41,7 @@ function SearchBar({ search, handleSearch, setSearch }: SearchBarProps) {
             )} */}
 
             {!search && (
-                <div className="max-w-10 max-h-10 min-w-10 min-h-10 flex justify-center rounded-full">
+                <div className="max-w-10 max-h-10 min-w-10 min-h-10 w-10 h-10 flex justify-center rounded-full">
                     <Avatar />
                 </div>
             )}

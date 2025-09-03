@@ -15,19 +15,6 @@ import { IoMdShareAlt } from "react-icons/io";
 import { IoSettingsOutline, IoSearchOutline } from "react-icons/io5";
 import { useMemo } from "react";
 
-
-// const ScanSearch = React.lazy(() =>
-//     import("../pages/search").then((m) => ({ default: m.ScanSearch }))
-// );
-
-// const CommentSearch = React.lazy(() =>
-//     import("../pages/search").then((m) => ({ default: m.CommentSearch }))
-// );
-
-// const SubscriptionSearch = React.lazy(() =>
-//     import("../pages/search").then((m) => ({ default: m.SubscriptionSearch }))
-// );
-
 type UserInfo = {
     referralId: string;
     username: string;
@@ -151,7 +138,7 @@ function Profile() {
 
                 <div className="flex justify-between items-center w-full gap-3 p-3">
                     <div className="flex gap-4 items-center mt-2 w-full ">
-                        <div className="w-24 h-24 min-w-24 min-h-24 rounded-full relative">
+                        <div className="w-24 h-24 min-w-24 min-h-24 rounded-full relative bg-slate-700">
                             <img
                                 src={user?.photo_url}
                                 className="w-full h-full object-cover rounded-full"

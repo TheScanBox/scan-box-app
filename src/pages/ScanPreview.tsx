@@ -92,6 +92,7 @@ function ScanPreview() {
         { [index: string]: number }[]
     >([]);
     const [noData, setNoData] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     const { tgWebAppData } = retrieveLaunchParams();
     const user = tgWebAppData?.user;
@@ -430,11 +431,15 @@ function ScanPreview() {
             >
                 <div className="w-full min-h-56 flex gap-2.5 px-3">
                     <div
-                        className="h-full w-3/4 min-w-32 max-w-[150px] bg-cover bg-center relative"
-                        style={{
-                            backgroundImage: `url(${data?.imgUrl})`,
-                        }}
+                        className={`h-full w-3/4 min-w-32 max-w-[150px] relative bg-slate-700 ${imageLoaded ? "" : "animate-pulse"}`}
                     >
+                        <img
+                            src={data?.imgUrl}
+                            className="w-full h-full object-cover object-center"
+                            alt={data?.title}
+                            onLoad={() => setImageLoaded(true)}
+                            onError={() => setImageLoaded(true)}
+                        />
                         <div className="">
                             {data?.status && (
                                 <div
@@ -443,6 +448,7 @@ function ScanPreview() {
                                 </div>
                             )}
                         </div>
+                        <div className="absolute top-0 left-0 right-0 bottom-0 z-40" />
                     </div>
 
                     <div className="space-y-3 w-full overflow-x-hidden overflow-y-visible">

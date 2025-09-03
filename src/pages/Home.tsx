@@ -16,12 +16,14 @@ import api from "../libs/api";
 import { debounce } from "lodash";
 import { useAlert } from "../context/AlertContext";
 import { useSafeArea } from "@/context/SafeAreaContext";
-import { cloudStorage } from "@telegram-apps/sdk-react";
+import { cloudStorage, openTelegramLink } from "@telegram-apps/sdk-react";
 import useUser from "@/hooks/useUser";
+import ActionPopup from "@/components/ActionPopup";
 
 function Home() {
     const [search, setSearch] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [openActionPopup, setOpenActionPopup] = useState(false);
 
     const { top, bottom } = useSafeArea();
     const { showAlert } = useAlert();
@@ -35,6 +37,26 @@ function Home() {
         setSearch(searchText);
         debouncedSearch(searchText);
     };
+
+    const setNextPopupTime = async () => {
+        const now = new Date();
+        const nextPopupTime = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
+
+        await cloudStorage.setItem("nextActionPopupTime", nextPopupTime.toISOString());
+    }
+
+    const onActionPopupClose = async () => {
+        setOpenActionPopup(false);
+
+        await setNextPopupTime();
+    }
+
+    const onActionPopupAction = async () => {
+        setOpenActionPopup(false);
+        openTelegramLink("https://t.me/thescanbox");
+
+        await setNextPopupTime();
+    }
 
     const fetchData = async (key: string) => {
         const { data, status } = await api.get(`/scans?key=${key}`);
@@ -142,6 +164,41 @@ function Home() {
 
         updateUserScan();
     }, [user]);
+
+    useEffect(() => {
+        const checkNextPopupTime = async () => {
+            if (import.meta.env.VITE_APP_ENV != "development") return;
+
+            const nextPopupTime = await cloudStorage.getItem("nextActionPopupTime") as unknown as { nextActionPopupTime: string } | null;
+            const nextPopupTimeStr = nextPopupTime ? nextPopupTime.nextActionPopupTime : null;
+
+            if (nextPopupTimeStr) {
+                const nextPopupTime = new Date(nextPopupTimeStr);
+                const now = new Date();
+
+                if (now >= nextPopupTime) {
+                    try {
+                        const subscribedRes = await api.get('/users/subscribe');
+                        const isSubscribed = subscribedRes.data.subscribed as boolean;
+
+                        if (isSubscribed) {
+                            await setNextPopupTime();
+                            return;
+                        }
+
+                        setOpenActionPopup(true);
+                    } catch (error) {
+                        setOpenActionPopup(true);
+                    }
+                }
+
+            } else {
+                setOpenActionPopup(true);
+            }
+        };
+
+        checkNextPopupTime();
+    }, []);
 
     if (recentLoading) {
         return <HomeLoading />;
@@ -269,6 +326,15 @@ function Home() {
 
                 {search ? "" : <Footer />}
             </section>
+
+            {
+                openActionPopup && (
+                    <ActionPopup
+                        onClose={onActionPopupClose}
+                        onAction={onActionPopupAction}
+                    />
+                )
+            }
         </Page>
     );
 }
