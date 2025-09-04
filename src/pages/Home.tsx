@@ -193,7 +193,7 @@ function Home() {
                 }
 
             } else {
-                setOpenActionPopup(true);
+                await setNextPopupTime();
             }
         };
 

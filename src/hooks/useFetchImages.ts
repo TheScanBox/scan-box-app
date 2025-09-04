@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ScanImage } from "../components/ScanLoader";
 import { ScanResponse } from "../App";
 import { useUserScans } from "./useUserScans";
 import { RecentScan } from "@/types";
 import useUser from "./useUser";
+import { cloudStorage } from "@telegram-apps/sdk-react";
 
 type StateType = {
     chapData:
@@ -40,6 +41,8 @@ const useFetchImages = ({
     const [loading, setLoading] = useState(true);
     const [chapterName, setChapterName] = useState<number>();
 
+    const hasUpdatedRef = useRef(false);
+
     const user = useUser()
     const { addScan, updateScan, getScanItem, data } = useUserScans(user?.id?.toString());
 
@@ -48,22 +51,33 @@ const useFetchImages = ({
             if (!data) return;
             if (!id) return;
             if (!selectedChap) return;
+            if (hasUpdatedRef.current) return;
 
             const itemInList = getScanItem("recents", id) as RecentScan | undefined;
 
+            console.log(hasUpdatedRef.current)
+
+            await cloudStorage.setItem(`selectedChap-${id}`, selectedChap);
+
             if (itemInList) {
-                if (itemInList.chapterNumber == parseInt(selectedChap)) return;
                 if (!chapterName) return;
+                if (parseInt(selectedChap) === itemInList.chapterNumber) return;
 
                 await updateScan({
                     type: "recents",
                     data: {
                         scanId: id,
                         chapterNumber: parseInt(selectedChap),
-                        chapterName: chapterName?.toString() || "",
+                        chapterName: String(chapterName ?? ""),
                         lastReadAt: new Date().toISOString(),
                     },
                 });
+
+                if (!hasUpdatedRef.current) {
+                    hasUpdatedRef.current = true;
+                    console.log("updated recent");
+                }
+
                 return;
             }
 
@@ -79,16 +93,20 @@ const useFetchImages = ({
                     imgUrl: state.data.imgUrl,
                     userId: String(user?.id),
                     chapterNumber: parseInt(selectedChap),
-                    chapterName: chapterName?.toString() || "",
+                    chapterName: String(chapterName ?? ""),
                     lastReadAt: new Date().toISOString(),
                     createdAt: new Date().toISOString(),
                     stars: state.data.stars,
                 } as RecentScan,
             })
+
+            if (!hasUpdatedRef.current) {
+                hasUpdatedRef.current = true;
+            }
         };
 
         updateData();
-    }, [data, selectedChap, id, chapterName, getScanItem, user?.id]);
+    }, [data, selectedChap, id, chapterName, user?.id]);
 
     useEffect(() => {
         if (!state.allChapters && !allChapters) return;
@@ -129,10 +147,11 @@ const useFetchImages = ({
 
         firstImage.src = pages[0]?.url;
 
-        // setPageUrls(pages);
         setLoading(true);
         setImages(pages);
         setChapterName(chapName);
+
+        hasUpdatedRef.current = false;
 
     }, [selectedChap, state.data, chapData, allChapters]);
 

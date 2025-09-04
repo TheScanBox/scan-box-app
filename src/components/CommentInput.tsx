@@ -8,6 +8,7 @@ import { useAddComment } from "@/hooks/comments/useAddComment";
 import { useUpdateComment } from "@/hooks/comments/useUpdateComment";
 import { IoMdClose } from "react-icons/io";
 import { useSafeArea } from "@/context/SafeAreaContext";
+import { nanoid } from "nanoid";
 
 type CommentInputProps = {
     isEdit?: boolean,
@@ -43,7 +44,7 @@ const CommentInput = ({ isEdit = false, commentId, editCommentId, setEditComment
                     await updateComment({
                         commentId: editCommentId,
                         content: comment,
-                        userId: user?.id || 0,
+                        userId: user?.id?.toString() || "",
                         fromProfile: fromProfile
                     });
 
@@ -56,9 +57,10 @@ const CommentInput = ({ isEdit = false, commentId, editCommentId, setEditComment
                 }
 
                 await mutateAsync({
+                    id: nanoid(),
                     content: comment,
                     parentId: commentId || null,
-                    userId: user?.id,
+                    userId: user?.id?.toString() || "",
                     chapterNumber: parseInt(params.chapterNumber) || chapterNumber,
                     scanId: params?.scanId || scanId,
                     fromProfile: fromProfile

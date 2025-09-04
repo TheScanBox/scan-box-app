@@ -2,8 +2,7 @@ import { IoMdClose } from "react-icons/io";
 import { useAlert } from "../context/AlertContext";
 import { useSafeArea } from "@/context/SafeAreaContext";
 import { useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import axios from "axios";
+import { useEffect, useRef } from "react";
 import useUser from "@/hooks/useUser";
 import api from "@/libs/api";
 
@@ -24,21 +23,30 @@ const AlertMessage = () => {
     const { pathname } = useLocation()
     const user = useUser();
 
+    const hasMarkedAsSeenRef = useRef(false);
+
     useEffect(() => {
         if (!showAlert || !alert || !user?.id || pathname == "/") return;
 
         const markAsSeen = async () => {
+            if (!alert.id) return;
+            if (hasMarkedAsSeenRef.current) return;
+
             try {
                 await api.post(`/alert/${alert.id}/seen`, {
                     userId: String(user?.id)
                 });
+
+                if (!hasMarkedAsSeenRef.current) {
+                    hasMarkedAsSeenRef.current = true;
+                }
             } catch (error) {
                 console.error("Failed to mark alert as seen:", error);
             }
         };
 
         markAsSeen();
-    }, [showAlert, alert, user?.id, pathname]);
+    }, [showAlert, alert, user?.id]);
 
     if (!showAlert || !alert || pathname == "/") return null;
 

@@ -6,7 +6,7 @@ const updateCommentOnServer = async ({
     commentId,
     content,
     userId
-}: { commentId: string; content: string, userId: number }) => {
+}: { commentId: string; content: string, userId: string }) => {
     const { data, status } = await api.put(`/comments/${commentId}`, { content, userId });
     if (status !== 200) {
         throw new Error("Network response was not ok");
@@ -18,7 +18,7 @@ export const useUpdateComment = (scanId: string, chapterNumber: string) => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (params: { commentId: string; content: string, userId: number, fromProfile: boolean }) =>
+        mutationFn: (params: { commentId: string; content: string, userId: string, fromProfile: boolean }) =>
             updateCommentOnServer(params),
         onSuccess: (updatedComment: CommentType, variable) => {
             queryClient.setQueryData(

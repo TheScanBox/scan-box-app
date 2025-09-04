@@ -2,7 +2,6 @@ import { CiStar } from "react-icons/ci";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import { useNavigate } from "react-router-dom";
 import { IoIosTrash } from "react-icons/io";
-import { useState } from "react";
 
 export type ResultItem = {
     imgUrl: string | undefined;
@@ -36,7 +35,6 @@ function Card({
     onDelete
 }: CardProps) {
     const navigate = useNavigate();
-    const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
         <div
@@ -53,12 +51,11 @@ function Card({
                     backgroundImage: `url(${imgUrl})`,
                 }}
             /> */}
-            <div className={`w-full h-40 relative bg-slate-700 ${imageLoaded ? "" : "animate-pulse"}`}>
+            <div className={`w-full h-40 relative bg-slate-700`}>
                 <LazyLoadImage
                     src={imgUrl}
                     className="w-full h-full object-cover object-center"
                     alt={title}
-                    onLoad={() => setImageLoaded(true)}
                 />
                 <div className="absolute top-0 bottom-0 left-0 right-0 z-10" />
                 {isProfile && (

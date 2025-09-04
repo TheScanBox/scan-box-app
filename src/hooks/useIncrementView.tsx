@@ -7,8 +7,11 @@ const useIncrementView = (scanId: string, { enabled }: { enabled: boolean }) => 
         if (!enabled) return
 
         const incrementView = async () => {
+            if (sessionStorage.getItem(`viewed-${scanId}`) === "true") return;
+
             try {
                 await api.post(`/view/increment/${scanId}`)
+                sessionStorage.setItem(`viewed-${scanId}`, "true")
             } catch (error) {
                 console.error("Failed to increment view count:", error)
             }
