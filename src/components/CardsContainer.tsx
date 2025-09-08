@@ -4,6 +4,7 @@ import Card from "./Card";
 import { Link } from "react-router-dom";
 import CardLoading from "./Loading/CardLoading";
 import { BookmarkScan, FavoriteScan } from "@/types";
+import { useRef, useState } from "react";
 
 type CardsContainerProps = {
     title: string;
@@ -13,6 +14,12 @@ type CardsContainerProps = {
     error: Error | null;
 };
 
+type ScrollDiv = HTMLDivElement & {
+    isDown?: boolean;
+    startX?: number;
+    scrollLeftStart?: number;
+};
+
 function CardsContainer({
     title,
     data,
@@ -20,6 +27,48 @@ function CardsContainer({
     loading,
     error,
 }: CardsContainerProps) {
+    const scrollRef = useRef<ScrollDiv>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const isDraggingRef = useRef(false);
+    const startXRef = useRef(0);
+    const scrollStartRef = useRef(0);
+
+    const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        const el = scrollRef.current;
+        if (!el) return;
+
+        el.isDown = true;
+        startXRef.current = e.pageX;
+        scrollStartRef.current = el.scrollLeft;
+        isDraggingRef.current = false;
+        setIsDragging(false); // reset state for click-blocking in children
+    };
+
+    const onMouseLeave = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+        el.isDown = false;
+    };
+
+    const onMouseUp = () => {
+        const el = scrollRef.current;
+        if (!el) return;
+        el.isDown = false;
+    };
+
+    const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        const el = scrollRef.current;
+        if (!el || !el.isDown) return;
+
+        const dx = e.pageX - startXRef.current;
+        if (Math.abs(dx) > 5) {
+            isDraggingRef.current = true;
+            setIsDragging(true); // update state for click-blocking in children
+        }
+
+        el.scrollLeft = scrollStartRef.current - dx;
+    };
+
     if (loading)
         return (
             <section className="mt-4 animate-pulse">
@@ -61,15 +110,23 @@ function CardsContainer({
                 </Link>
             </h1>
 
-            <div className=" flex gap-2 overflow-x-auto no-scrollbar">
+            <div
+                ref={scrollRef}
+                className="flex gap-2 overflow-x-auto no-scrollbar cursor-grab active:cursor-grabbing"
+                onMouseDown={onMouseDown}
+                onMouseLeave={onMouseLeave}
+                onMouseUp={onMouseUp}
+                onMouseMove={onMouseMove}
+            >
                 {!!data?.length &&
-                    data?.map((scan) => (
+                    data?.map((scan: any) => (
                         <Card
                             key={scan?.id}
                             {...scan}
                             id={scan.scanId}
                             parentId={scan.scanParentId}
                             type={undefined}
+                            isDragging={isDragging}
                         />
                     ))}
             </div>
@@ -78,3 +135,4 @@ function CardsContainer({
 }
 
 export default CardsContainer;
+// filepath: c:\Programming\Projects\scan-

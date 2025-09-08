@@ -28,7 +28,7 @@ function Banner({ data }: { data: ScanResponse[] }) {
     return (
         <div
             onClick={updateIndex}
-            className="w-full h-48 lg:h-64 bg-slate-500 mt-4 rounded-lg relative"
+            className="w-full h-48 md:h-64 bg-slate-500 mt-4 rounded-lg relative"
         >
             <div className="flex gap-1 absolute top-2 right-1 p-2">
                 {data.map((_, idx) => (

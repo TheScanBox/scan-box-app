@@ -95,7 +95,7 @@ const SubscriptionItem = ({
                 <img
                     src={subscription.scan?.imgUrl}
                     alt={subscription.scan?.title}
-                    className="w-20 min-w-20 h-28 object-cover rounded"
+                    className="w-20 min-w-20 h-28 object-cover rounded md:w-28 md:min-w-28 md:h-36"
                 />
             </div>
             <div className="flex flex-col flex-1 gap-2">

@@ -17,10 +17,7 @@ export const useRequestFullscreen = () => {
 
                 const { tgWebAppPlatform } = retrieveLaunchParams();
 
-                if (
-                    tgWebAppPlatform != "android" &&
-                    tgWebAppPlatform != "ios"
-                ) {
+                if (tgWebAppPlatform != "android" && tgWebAppPlatform != "ios") {
                     return;
                 }
 

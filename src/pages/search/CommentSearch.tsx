@@ -10,6 +10,7 @@ import { useLocation } from "react-router-dom";
 import SearchBar from "./components/SearchBar";
 import { useSafeArea } from "@/context/SafeAreaContext";
 import { useAlert } from "@/context/AlertContext";
+import ProfileRepliesContainer from "@/components/ProfileRepliesContainer";
 
 type CommentSearchProps = {
     searchTerm?: string;
@@ -40,6 +41,8 @@ const CommentSearch = () => {
     const { showAlert } = useAlert();
 
     const [searchTerm, setSearchTerm] = useState("");
+    const [open, setOpen] = useState(false);
+    const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
     const debouncedSearch = useDebounce(searchTerm, 500);
 
     const { data, isLoading, isError, refetch } = UseCommentSearch({ searchTerm: debouncedSearch.toLowerCase() });
@@ -47,7 +50,7 @@ const CommentSearch = () => {
     return (
         <Page>
             <div
-                className="text-white"
+                className="text-white md:max-w-[700px] mx-auto"
                 style={{ marginTop: showAlert ? 0 : top, paddingBottom: bottom + 16 }}
             >
                 <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
@@ -96,15 +99,29 @@ const CommentSearch = () => {
                     !isLoading && !isError && data && data.length > 0 && (
                         <div className="flex flex-col gap-4 mt-2">
                             {data.map((comment) => (
-                                <Comment
+                                <div
                                     key={comment.id}
-                                    {...comment}
-
-                                />
+                                    className="cursor-pointer"
+                                    onClick={() => {
+                                        setSelectedCommentId(comment.id);
+                                        setOpen(true);
+                                    }}
+                                >
+                                    <Comment
+                                        key={comment.id}
+                                        {...comment}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )
                 }
+
+                <ProfileRepliesContainer
+                    open={open}
+                    setOpen={setOpen}
+                    commentId={selectedCommentId}
+                />
             </div>
         </Page>
     )

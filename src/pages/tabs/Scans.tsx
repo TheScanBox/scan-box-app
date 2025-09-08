@@ -21,9 +21,9 @@ export const RecentCard = ({ item, handleRead, onDelete, isProfile = true }: {
 }) => (
     <div
         onClick={() => handleRead(item, isProfile)}
-        className={`flex w-32 min-w-32 flex-col gap-2 text-white cursor-pointer`}
+        className={`flex w-32 min-w-32 md:w-40 md:min-w-40 flex-col gap-2 text-white cursor-pointer`}
     >
-        <div className="w-full h-40 relative">
+        <div className="w-full h-40 md:h-52 relative">
             <LazyLoadImage
                 src={item.imgUrl}
                 className="w-full h-full object-cover"

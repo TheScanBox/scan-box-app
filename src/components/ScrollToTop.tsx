@@ -17,7 +17,7 @@ const ScrollToTop = ({
                 style={{
                     marginBottom: bottom ? bottom + 75 : "8rem",
                 }}
-                className="fixed right-4 px-4 py-4 bg-black/90 rounded-full text-white flex justify-center items-center cursor-pointer"
+                className="absolute right-4 px-4 py-4 bg-black/90 rounded-full text-white flex justify-center items-center cursor-pointer"
                 onClick={handleScroll}
             >
                 <FaArrowUp size={18} />

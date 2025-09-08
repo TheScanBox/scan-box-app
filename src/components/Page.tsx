@@ -1,4 +1,4 @@
-import { backButton, init } from "@telegram-apps/sdk-react";
+import { backButton, exitFullscreen, init } from "@telegram-apps/sdk-react";
 import { PropsWithChildren, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router";
 
@@ -28,6 +28,13 @@ export function Page({
 
     useEffect(() => {
         return backButton.onClick(() => {
+            const lectureFullscreen = location.pathname.includes("/read/") && localStorage.getItem("lectureFullscreen") === "true";
+
+            if (lectureFullscreen) {
+                exitFullscreen().catch(error => console.log(error));
+                localStorage.setItem("lectureFullscreen", "false");
+            }
+
             if (location.pathname.includes("/search")) {
                 navigate(-1);
                 return;
@@ -67,8 +74,8 @@ export function Page({
             }
 
             if (location.search.includes("?source=auth")) {
-                if (location.pathname.includes("read") && location.state.data) {
-                    const { scanId, scanParentId } = location.state.data;
+                if (location.pathname.includes("read") && location.state?.data) {
+                    const { scanId, scanParentId } = location.state?.data;
 
                     const path = scanParentId
                         ? `../details/${scanId}/${scanParentId}?source=auth`

@@ -1,8 +1,11 @@
 import { IoIosArrowForward, IoMdShareAlt, IoMdSunny } from "react-icons/io";
+import { BiFullscreen, BiExitFullscreen } from "react-icons/bi";
 import { useSafeArea } from "@/context/SafeAreaContext";
-import { shareURL } from "@telegram-apps/sdk-react";
+import { retrieveLaunchParams, shareURL, isFullscreen, mountViewport, requestFullscreen, exitFullscreen } from "@telegram-apps/sdk-react";
 import { capitalize } from "../pages/ScanPreview";
 import { useAlert } from "../context/AlertContext";
+import { useMemo, useState } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 
 type ScanLectureControlsProps = {
     numChap: number;
@@ -25,28 +28,39 @@ function ScanLectureControls({
 }: ScanLectureControlsProps) {
     const { top } = useSafeArea();
     const { showAlert } = useAlert();
+    const { tgWebAppPlatform } = retrieveLaunchParams();
+    const [isFullscreenMode, setIsFullscreenMode] = useState(isFullscreen());
 
     const handleCopy = () => {
         const APP_URL = import.meta.env.VITE_APP_URL;
         shareURL(`${APP_URL}?startapp=read_${scanID}_${selectedChap}`, `\nLisez le Chapitre ${selectedChapName} de **${capitalize(title)}** !`)
     };
 
-    // const fullScreen = async () => {
-    //     if (!isFullscreen()) {
-    //         await mountViewport();
-    //         if (requestFullscreen.isAvailable() && !isFullscreen()) {
-    //             try {
-    //                 await requestFullscreen();
-    //             } catch (error) {
-    //                 alert(JSON.stringify(error));
-    //             }
-    //         }
+    const isNotMobile = useMemo(() => {
+        return tgWebAppPlatform !== "ios" && tgWebAppPlatform !== "android";
+    }, [tgWebAppPlatform]);
 
-    //         return;
-    //     }
+    const handleFullscreen = async () => {
+        if (!isFullscreen()) {
+            await mountViewport();
+            if (requestFullscreen.isAvailable() && !isFullscreen()) {
+                try {
+                    await requestFullscreen();
+                } catch (error) {
+                    alert(JSON.stringify(error));
+                }
+            }
 
-    //     await exitFullscreen();
-    // };
+            localStorage.setItem("lectureFullscreen", "true");
+
+            setIsFullscreenMode(true);
+            return;
+        }
+
+        await exitFullscreen();
+        localStorage.setItem("lectureFullscreen", "false");
+        setIsFullscreenMode(false);
+    };
 
     return (
         <div
@@ -66,13 +80,29 @@ function ScanLectureControls({
             </div>
 
             <div className="flex flex-row items-center gap-3">
+                {isNotMobile && (
+                    <button
+                        title={isFullscreenMode ? "Quitter le mode plein écran" : "Passer en plein écran"}
+                        className="cursor-pointer"
+                        onClick={handleFullscreen}
+                    >
+                        {isFullscreenMode ? (<BiExitFullscreen size={23} />) : (<BiFullscreen size={23} />)}
+                    </button>
+                )}
+
                 <button
+                    title="Modifier la luminosité"
                     className="cursor-pointer"
                     onClick={() => setShowLightConfig((prev) => !prev)}
                 >
                     <IoMdSunny size={23} />
                 </button>
-                <button className="cursor-pointer" onClick={handleCopy}>
+
+                <button
+                    title="Partager le chapitre"
+                    className="cursor-pointer"
+                    onClick={handleCopy}
+                >
                     <IoMdShareAlt size={24} />
                 </button>
             </div>

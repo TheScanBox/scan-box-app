@@ -47,6 +47,7 @@ function ScanLecture() {
     // const hasMounted = useRef(false);
 
     const [visible, setVisible] = useState(false);
+    const [scanLoading, setScanLoading] = useState(true);
     const [showLightConfig, setShowLightConfig] = useState(false);
     const [luminousity, setLiminousity] = useLocalStorage("luminousity", 100);
 
@@ -130,10 +131,16 @@ function ScanLecture() {
             e.stopPropagation();
 
             const scrollHeight = document.documentElement.scrollHeight;
-            const scrollTop =
-                document.documentElement.scrollTop || window.scrollY || 0;
+            const scrollTop = document.documentElement.scrollTop || window.scrollY || 0;
+            const clientHeight = document.documentElement.clientHeight;
 
             const progress = (scrollTop / scrollHeight) * 100;
+
+            if ((scrollTop + clientHeight >= scrollHeight) && !loading && !scanLoading) {
+                console.log(scanLoading)
+                setScrollProgress(100);
+                return;
+            }
 
             setScrollProgress(progress);
             setVisible(scrollTop > 600);
@@ -143,10 +150,11 @@ function ScanLecture() {
 
         return () =>
             document.removeEventListener("scroll", updateScrollProgress);
-    }, []);
+    }, [loading, scanLoading]);
 
     useEffect(() => {
         if (loading) return;
+        if (scanLoading) return;
         if (isLoading) return;
         if (specialChaptersLoading) return;
         if (notFound) return;
@@ -156,7 +164,7 @@ function ScanLecture() {
             hasMarkedRef.current = true;
             markChapterAsRead();
         }
-    }, [scrollProgress]);
+    }, [scrollProgress, scanLoading, loading, isLoading, specialChaptersLoading, notFound]);
 
     useEffect(() => {
         hasMarkedRef.current = false;
@@ -192,7 +200,7 @@ function ScanLecture() {
 
         return (
             <Page>
-                <div className="h-screen flex flex-col justify-center items-center text-white">
+                <div className="h-screen flex flex-col justify-center items-center text-white w-full md:max-w-[700px] mx-auto select-none">
                     <h1 className="text-2xl font-bold">Chapitre Introuvable</h1>
                     <p className="text-sm text-slate-400">Please Try Later</p>
 
@@ -201,7 +209,7 @@ function ScanLecture() {
                         replace
                         className="underline text-sm mt-3 text-red-600 "
                     >
-                        Back To {capitalize(state.data.title)}
+                        Back To {capitalize(state?.data.title)}
                     </Link>
                 </div>
             </Page>
@@ -232,7 +240,7 @@ function ScanLecture() {
 
     if (isLoading || specialChaptersLoading) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
+            <div className="flex flex-col justify-center items-center h-screen w-full overflow-y-hidden text-white md:max-w-[700px] mx-auto select-none">
                 <Loading loadingText="Chargement de la Page..." />
             </div>
         );
@@ -251,7 +259,7 @@ function ScanLecture() {
                     selectedChap={selectedChap}
                     scanID={param.id}
                     showControls={showControls}
-                    title={state.data.title}
+                    title={state?.data.title}
                     setShowLightConfig={setShowLightConfig}
                 />
 
@@ -260,6 +268,7 @@ function ScanLecture() {
                     luminousity={luminousity}
                     setShowControls={setShowControls}
                     setShowLightConfig={setShowLightConfig}
+                    setScanLoading={setScanLoading}
                     pageLoading={loading}
                 />
 
@@ -276,7 +285,7 @@ function ScanLecture() {
                 <ProgressBar scrollProgress={scrollProgress} />
 
                 <ScanLectureControlsBottom
-                    numChap={Object.keys(state.chapData || chapData).length}
+                    numChap={Object.keys(state?.chapData || chapData).length}
                     showControls={showControls}
                     setSelectedChap={setSelectedChap}
                     selectedChap={selectedChap}
@@ -287,6 +296,7 @@ function ScanLecture() {
                     parentId={param.parentId}
                     state={state}
                     showTip={scrollProgress >= 95}
+                    setScanLoading={setScanLoading}
                 />
             </section>
         </Page>

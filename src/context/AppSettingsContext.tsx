@@ -6,6 +6,7 @@ type AppSettingsType = {
         active: boolean;
         intervalMs: number;
     };
+    mobileOnly: boolean;
     [key: string]: any;
 
 } | null;

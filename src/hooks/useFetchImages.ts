@@ -52,10 +52,9 @@ const useFetchImages = ({
             if (!id) return;
             if (!selectedChap) return;
             if (hasUpdatedRef.current) return;
+            if (!state?.data) return;
 
             const itemInList = getScanItem("recents", id) as RecentScan | undefined;
-
-            console.log(hasUpdatedRef.current)
 
             await cloudStorage.setItem(`selectedChap-${id}`, selectedChap);
 
@@ -87,16 +86,16 @@ const useFetchImages = ({
                 type: "recents",
                 data: {
                     scanId: id,
-                    scanParentId: state.data.scanParentId,
-                    scanPath: state.data.scanPath,
-                    title: state.data.title,
-                    imgUrl: state.data.imgUrl,
+                    scanParentId: state?.data.scanParentId,
+                    scanPath: state?.data.scanPath,
+                    title: state?.data.title,
+                    imgUrl: state?.data.imgUrl,
                     userId: String(user?.id),
                     chapterNumber: parseInt(selectedChap),
                     chapterName: String(chapterName ?? ""),
                     lastReadAt: new Date().toISOString(),
                     createdAt: new Date().toISOString(),
-                    stars: state.data.stars,
+                    stars: state?.data.stars,
                 } as RecentScan,
             })
 
@@ -109,7 +108,7 @@ const useFetchImages = ({
     }, [data, selectedChap, id, chapterName, user?.id]);
 
     useEffect(() => {
-        if (!state.allChapters && !allChapters) return;
+        if (!state?.allChapters && !allChapters) return;
         let all = state?.allChapters ? state?.allChapters : allChapters;
 
         if (!all) return;
@@ -130,7 +129,7 @@ const useFetchImages = ({
         for (let i = 1; i <= newChapData?.[selectedChap!]; i++) {
             pages.push({
                 id: i,
-                url: `https://anime-sama.fr/s2/scans/${state.data.scanPath}/${selectedChap}/${i}.jpg`,
+                url: `https://anime-sama.fr/s2/scans/${state?.data.scanPath}/${selectedChap}/${i}.jpg`,
             });
         }
 
@@ -153,7 +152,7 @@ const useFetchImages = ({
 
         hasUpdatedRef.current = false;
 
-    }, [selectedChap, state.data, chapData, allChapters]);
+    }, [selectedChap, state?.data, chapData, allChapters]);
 
     return { loading, images, chapterName };
 };

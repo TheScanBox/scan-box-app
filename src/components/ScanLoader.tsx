@@ -11,6 +11,7 @@ type ScanLoaderType = {
     images: ScanImage[];
     luminousity: number;
     pageLoading: boolean;
+    setScanLoading: React.Dispatch<React.SetStateAction<boolean>>;
     setShowControls: React.Dispatch<React.SetStateAction<boolean>>;
     setShowLightConfig: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -80,6 +81,7 @@ const ScanLoader = ({
     pageLoading,
     setShowControls,
     setShowLightConfig,
+    setScanLoading
 }: ScanLoaderType) => {
     const [loading, setLoading] = useState(false);
     const [imagesQueue, setImagesQueue] = useState([...images]);
@@ -161,6 +163,13 @@ const ScanLoader = ({
         img.src = nextImage.url;
     }, [imagesQueue, loading]);
 
+    useEffect(() => {
+        if (!loading && imagesQueue.length === 0 && images.length > 0) {
+            setScanLoading(false);
+        }
+
+    }, [loading, imagesQueue]);
+
     return (
         <div
             className="z-10 w-full select-none"
@@ -171,7 +180,7 @@ const ScanLoader = ({
         // onDoubleClick={() => setShowControls((prev) => !prev)}
         >
             {pageLoading ? (
-                <div className="flex flex-col justify-center items-center h-screen w-screen overflow-y-hidden text-white">
+                <div className="flex flex-col justify-center items-center h-screen overflow-y-hidden text-white w-full md:max-w-[700px] mx-auto select-none">
                     <Loading loadingText="Chargement des données..." />
                 </div>
             ) : (

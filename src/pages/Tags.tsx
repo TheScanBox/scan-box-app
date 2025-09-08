@@ -87,8 +87,6 @@ const Tags = () => {
         );
     }
 
-    console.log(scans);
-
     return (
         <Page>
             <section
@@ -97,16 +95,17 @@ const Tags = () => {
                     marginTop: showAlert ? 0 : top,
                 }}
             >
-                <h1 className="text-white text-3xl mb-3 capitalize truncate">
+                <h1 className="text-white text-3xl mb-3 capitalize truncate md:text-4xl">
                     Genre {params.id}
                 </h1>
 
-                <div className="flex flex-col">
+                {/* <div className="flex flex-col"> */}
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-4 gap-2 mb-3">
                     {splitArray(
                         scans?.pages.flatMap((arr) => arr) || [],
                         3
-                    ).map((group, idx) => (
-                        <div key={idx} className="grid grid-cols-3 gap-2 mb-3 ">
+                    ).map((group) => (
+                        <>
                             {group.map((scan) => (
                                 <Card
                                     key={scan?.id}
@@ -118,7 +117,7 @@ const Tags = () => {
                                     isMore={true}
                                 />
                             ))}
-                        </div>
+                        </>
                     ))}
                 </div>
 

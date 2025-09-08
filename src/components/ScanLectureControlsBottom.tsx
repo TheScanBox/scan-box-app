@@ -18,6 +18,7 @@ type ScanLectureControlsBottomProps = {
     numChap: number;
     showControls: boolean;
     setSelectedChap: React.Dispatch<React.SetStateAction<string>>;
+    setScanLoading: React.Dispatch<React.SetStateAction<boolean>>;
     selectedChap: string;
     visible: boolean;
     handleScroll: () => void;
@@ -39,7 +40,8 @@ const ScanLectureControlsBottom = ({
     parentId,
     chapterNumber,
     state,
-    showTip = false
+    showTip = false,
+    setScanLoading
 }: ScanLectureControlsBottomProps) => {
     const navigate = useNavigate();
     const { bottom } = useSafeArea();
@@ -104,13 +106,12 @@ const ScanLectureControlsBottom = ({
 
         setIsLiked(false);
         setSelectedChap(newSelectedChap.toString());
+        setScanLoading(true);
     };
 
     return (
         <div
-            style={{
-                paddingBottom: bottom ? bottom : "1rem",
-            }}
+            style={{ paddingBottom: bottom ? bottom : "1rem" }}
             className={`${showControls ? "show-controls" : "hidden"
                 } w-full items-center justify-between text-white select-none font-light fixed bottom-0 bg-black/90 p-3 z-30 md:max-w-[700px]`}
         >

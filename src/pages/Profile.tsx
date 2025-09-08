@@ -191,7 +191,7 @@ function Profile() {
                     <h2 className="text-lg flex flex-row items-center gap-1">
                         Invite Link:{" "}
                         <span className="text-xs">
-                            {userInfo?.friends || 0} Friends
+                            {userInfo?.friends || 0} Friend{(userInfo?.friends || 0) > 1 && "s"}
                         </span>{" "}
                     </h2>
                     <p className=" bg-black/50 text-slate-300 p-3 truncate rounded-md text-sm">

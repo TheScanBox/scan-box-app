@@ -24,6 +24,7 @@ import { useAlert } from "../context/AlertContext";
 import api from "../libs/api";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/context/AuthContext";
+import { useAppSettings } from "@/context/AppSettingsContext";
 
 // init();
 // miniAppReady();
@@ -44,6 +45,7 @@ const loadingMessages = [
 const Auth = () => {
     const navigate = useNavigate();
     const { setIsAuthenticated, setUser } = useAuth();
+    const { settings, loading } = useAppSettings();
     const queryClient = useQueryClient();
 
     const hasAuthenticated = useRef(false);
@@ -219,6 +221,29 @@ const Auth = () => {
                 return;
             }
 
+            if (command == "mycomments") {
+                navigate(`/profile/comments`, {
+                    replace: true,
+                });
+
+                return;
+            }
+
+            if (command == "myscans" || command == "myprofile") {
+                navigate(`/profile`, {
+                    replace: true,
+                });
+                return;
+            }
+
+            if (command == "mysubscriptions") {
+                navigate(`/profile/subscriptions`, {
+                    replace: true,
+                });
+
+                return;
+            }
+
             navigate("/home", {
                 replace: true,
             });
@@ -242,13 +267,15 @@ const Auth = () => {
     };
 
     useEffect(() => {
+        if (loading) return;
+
         const init = async () => {
             const { tgWebAppPlatform } = retrieveLaunchParams();
 
             if (
                 tgWebAppPlatform != "android" &&
                 tgWebAppPlatform != "ios" &&
-                import.meta.env.VITE_APP_ENV != "development"
+                settings?.mobileOnly
             ) {
                 navigate("/not-allowed", {
                     replace: true
@@ -275,7 +302,7 @@ const Auth = () => {
         };
 
         init();
-    }, []);
+    }, [loading, settings]);
 
     useEffect(() => {
         const intervalID = setInterval(() => {

@@ -109,7 +109,7 @@ const ScanSearch = () => {
     return (
         <Page>
             <div
-                className="text-white"
+                className="text-white md:max-w-[700px] mx-auto"
                 style={{ marginTop: showAlert ? 0 : top, paddingBottom: bottom + 16 }}
             >
                 <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />

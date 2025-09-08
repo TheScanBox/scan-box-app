@@ -104,16 +104,16 @@ const More = () => {
                     marginTop: showAlert ? 0 : top,
                 }}
             >
-                <h1 className="text-white text-3xl mb-3 capitalize">
+                <h1 className="text-white text-3xl mb-3 capitalize md:text-4xl truncate">
                     {params.id == "recent" ? "Récemment Ajouté" : params.id}
                 </h1>
 
-                <div className="flex flex-col">
+                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-4 gap-2 mb-3">
                     {splitArray(
                         scans?.pages.flatMap((arr) => arr) || [],
                         3
-                    ).map((group, idx) => (
-                        <div key={idx} className="grid grid-cols-3 gap-2 mb-3 ">
+                    ).map((group) => (
+                        <>
                             {group.map((scan) => (
                                 <Card
                                     key={scan?.id}
@@ -125,7 +125,7 @@ const More = () => {
                                     isMore={true}
                                 />
                             ))}
-                        </div>
+                        </>
                     ))}
                 </div>
 

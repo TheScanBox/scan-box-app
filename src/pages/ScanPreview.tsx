@@ -78,7 +78,7 @@ function ScanPreview() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
-    const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
     const [openRatings, setOpenRatings] = useState(false);
     const [openTrailer, setOpenTrailer] = useState(false);
 
@@ -92,7 +92,6 @@ function ScanPreview() {
         { [index: string]: number }[]
     >([]);
     const [noData, setNoData] = useState(false);
-    const [imageLoaded, setImageLoaded] = useState(false);
 
     const { tgWebAppData } = retrieveLaunchParams();
     const user = tgWebAppData?.user;
@@ -217,14 +216,35 @@ function ScanPreview() {
 
     }, [searchParams]);
 
+    const isChapterLiked = (chapterNum: number) => {
+        return likedChapters?.findIndex((chap) => chap.chapterNumber === chapterNum) !== -1;
+    }
+
+    const isChapterRead = (chapterNum: number) => {
+        return readChapters?.findIndex((chap) => chap.chapterNumber === chapterNum) !== -1;
+    }
+
     const handleToggleMenu = () => {
         if (!open && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
 
-            setMenuPos({
-                top: rect.bottom + 5,
-                right: rect.right - rect.left + 5,
-            });
+            const popupWidth = 160; // same as w-40 in Tailwind (40 * 4px = 160px)
+            const margin = 30;
+
+            let left = rect.left;
+            const top = rect.bottom + 5;
+
+            // If popup would overflow right side, adjust left
+            if (left + popupWidth > window.innerWidth) {
+                left = window.innerWidth - popupWidth - margin;
+            }
+
+            // Prevent going negative (off the left side)
+            if (left < margin) {
+                left = margin;
+            }
+
+            setMenuPos({ top, left });
         }
 
         setOpen((prev) => !prev);
@@ -431,14 +451,12 @@ function ScanPreview() {
             >
                 <div className="w-full min-h-56 flex gap-2.5 px-3">
                     <div
-                        className={`h-full w-3/4 min-w-32 max-w-[150px] relative bg-slate-700 ${imageLoaded ? "" : "animate-pulse"}`}
+                        className={`h-full w-3/4 min-w-32 max-w-[150px] relative bg-slate-700`}
                     >
                         <img
                             src={data?.imgUrl}
                             className="w-full h-full object-cover object-center"
                             alt={data?.title}
-                            onLoad={() => setImageLoaded(true)}
-                            onError={() => setImageLoaded(true)}
                         />
                         <div className="">
                             {data?.status && (
@@ -550,7 +568,8 @@ function ScanPreview() {
                             ref={menuRef}
                             style={{
                                 top: `${menuPos.top}px`,
-                                right: `${menuPos.right}px`,
+                                // right: `${menuPos.right}px`,
+                                left: `${menuPos.left}px`,
                             }}
                             className="text-white text-sm bg-slate-700 absolute mt-4 w-40 rounded-md shadow-xl z-50"
                         >
@@ -681,23 +700,11 @@ function ScanPreview() {
                                             className="cursor-pointer hover:opacity-40"
                                         >
                                             <ChapterItem
-                                                chapterNum={
-                                                    Object.values(obj)[0]
-                                                }
+                                                chapterNum={Object.values(obj)[0]}
                                                 img={data?.imgUrl}
                                                 name={data?.title}
-                                                isRead={readChapters?.findIndex(
-                                                    (chap) =>
-                                                        chap.chapterNumber ===
-                                                        Object.values(obj)[0]
-                                                ) !== -1}
-                                                isLiked={
-                                                    likedChapters?.findIndex(
-                                                        (chap) =>
-                                                            chap.chapterNumber ===
-                                                            Object.values(obj)[0]
-                                                    ) !== -1
-                                                }
+                                                isRead={isChapterRead(Number(Object.keys(obj)[0]))}
+                                                isLiked={isChapterLiked(Number(Object.keys(obj)[0]))}
                                             />
                                         </div>
                                     ))
@@ -719,40 +726,29 @@ function ScanPreview() {
                                             className="cursor-pointer hover:opacity-40"
                                         >
                                             <ChapterItem
-                                                chapterNum={
-                                                    Object.values(obj)[0]
-                                                }
+                                                chapterNum={Object.values(obj)[0]}
                                                 img={data?.imgUrl}
                                                 name={data?.title}
-                                                isRead={readChapters?.findIndex(
-                                                    (chap) =>
-                                                        chap.chapterNumber ===
-                                                        Object.values(obj)[0]
-                                                ) !== -1}
-                                                isLiked={
-                                                    likedChapters?.findIndex(
-                                                        (chap) =>
-                                                            chap.chapterNumber ===
-                                                            Object.values(obj)[0]
-                                                    ) !== -1
-                                                }
+                                                isRead={isChapterRead(Number(Object.keys(obj)[0]))}
+                                                isLiked={isChapterLiked(Number(Object.keys(obj)[0]))}
                                             />
                                         </div>
                                     ))}
                         </div>
 
                         {!isObjectEmpty(chapData) && (
-                            <button
-                                onClick={() => handleRead(savedChap ?? 1)}
-                                className="flex cursor-pointer items-center gap-1 fixed right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
-                                style={{
-                                    bottom: `calc(${bottom}px + 3.5rem)`,
-                                }}
-                            >
-                                <IoMdArrowDropright size={20} />
-                                {savedChap ? "Continue" : "Start"}
-                            </button>
-                        )}
+                            <div className="fixed inset-x-0 bottom-0 bg-red-400 md:max-w-[700px] mx-auto">
+                                <button
+                                    onClick={() => handleRead(savedChap ?? 1)}
+                                    className="flex cursor-pointer items-center gap-1 absolute right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"
+                                    style={{
+                                        bottom: `calc(${bottom}px + 3.5rem)`,
+                                    }}
+                                >
+                                    <IoMdArrowDropright size={20} />
+                                    {savedChap ? "Continue" : "Start"}
+                                </button>
+                            </div>)}
 
                         <div
                             className="flex items-center pb-4 gap-3 justify-center w-full"

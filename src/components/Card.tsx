@@ -20,7 +20,8 @@ type CardProps = {
     isProfile?: boolean;
     isUser?: boolean;
     type?: "favourites" | "bookmarks";
-    onDelete?: () => void
+    onDelete?: () => void,
+    isDragging?: boolean
 };
 
 function Card({
@@ -32,18 +33,21 @@ function Card({
     isMore = false,
     isUser = false,
     isProfile,
-    onDelete
+    onDelete,
+    isDragging = false
 }: CardProps) {
     const navigate = useNavigate();
 
     return (
         <div
-            className={`active:opacity-5 cursor-pointer ${isMore ? "w-full flex-1" : "min-w-32 w-32"}`}
-            onClick={() =>
+            className={`active:opacity-5 cursor-pointer ${isMore ? "flex-1/3" : "min-w-32 w-32 md:w-40 md:min-w-40"}`}
+            onClick={() => {
+                if (isDragging) return;
+
                 navigate(
                     `/details/${id}/${parentId}${isUser ? "?source=user" : ""}`,
                 )
-            }
+            }}
         >
             {/* <div
                 className="w-full h-36 bg-cover bg-center"
@@ -51,7 +55,7 @@ function Card({
                     backgroundImage: `url(${imgUrl})`,
                 }}
             /> */}
-            <div className={`w-full h-40 relative bg-slate-700`}>
+            <div className={`w-full h-40 relative bg-slate-700 md:h-52`}>
                 <LazyLoadImage
                     src={imgUrl}
                     className="w-full h-full object-cover object-center"
