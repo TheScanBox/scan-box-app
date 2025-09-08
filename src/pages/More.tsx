@@ -112,21 +112,19 @@ const More = () => {
                     {splitArray(
                         scans?.pages.flatMap((arr) => arr) || [],
                         3
-                    ).map((group) => (
-                        <>
-                            {group.map((scan) => (
-                                <Card
-                                    key={scan?.id}
-                                    id={scan.scanId}
-                                    imgUrl={scan.imgUrl}
-                                    stars={scan.stars}
-                                    parentId={scan.scanParentId}
-                                    title={scan.title}
-                                    isMore={true}
-                                />
-                            ))}
-                        </>
-                    ))}
+                    ).map((group) =>
+                        group.map((scan) => (
+                            <Card
+                                key={scan?.id}
+                                id={scan.scanId}
+                                imgUrl={scan.imgUrl}
+                                stars={scan.stars}
+                                parentId={scan.scanParentId}
+                                title={scan.title}
+                                isMore={true}
+                            />
+                        ))
+                    )}
                 </div>
 
                 <div

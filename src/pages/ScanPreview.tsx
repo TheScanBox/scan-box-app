@@ -56,6 +56,11 @@ export type LikeChapterType = {
     likeCount: number;
 };
 
+type MenuPosition = {
+    top: number;
+    left: number;
+}
+
 export const capitalize = (text: string) => {
     return text
         .split(" ")
@@ -78,7 +83,7 @@ function ScanPreview() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const [open, setOpen] = useState(false);
-    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const [menuPos, setMenuPos] = useState<MenuPosition>({ top: 0, left: 0 });
     const [openRatings, setOpenRatings] = useState(false);
     const [openTrailer, setOpenTrailer] = useState(false);
 
@@ -128,14 +133,6 @@ function ScanPreview() {
     const { data: likedChapters } = useGetLikedChapters<LikeChapterType[]>(param.id || "", { enabled: Boolean(data?.id) })
     const { data: readChapters } = UseGetReadChapters(param.id || "", user?.id.toString() || "", { enabled: Boolean(data?.id) })
     useIncrementView(param.id || "", { enabled: Boolean(data?.id) });
-
-    // useEffect(() => {
-    //     const exitFull = async () => {
-    //         if (isFullscreen()) await exitFullscreen();
-    //     };
-
-    //     exitFull();
-    // }, []);
 
     useEffect(() => {
         if (isObjectEmpty(chapData) && chapData?.failed == true) {
@@ -568,7 +565,6 @@ function ScanPreview() {
                             ref={menuRef}
                             style={{
                                 top: `${menuPos.top}px`,
-                                // right: `${menuPos.right}px`,
                                 left: `${menuPos.left}px`,
                             }}
                             className="text-white text-sm bg-slate-700 absolute mt-4 w-40 rounded-md shadow-xl z-50"
@@ -737,7 +733,7 @@ function ScanPreview() {
                         </div>
 
                         {!isObjectEmpty(chapData) && (
-                            <div className="fixed inset-x-0 bottom-0 bg-red-400 md:max-w-[700px] mx-auto">
+                            <div className="fixed inset-x-0 bottom-0 md:max-w-[700px] mx-auto">
                                 <button
                                     onClick={() => handleRead(savedChap ?? 1)}
                                     className="flex cursor-pointer items-center gap-1 absolute right-4 bg-red-600 px-3 py-2 rounded-lg text-white bottom-14"

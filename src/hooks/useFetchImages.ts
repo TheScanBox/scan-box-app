@@ -126,11 +126,13 @@ const useFetchImages = ({
 
         if (!newChapData) return;
 
-        for (let i = 1; i <= newChapData?.[selectedChap!]; i++) {
-            pages.push({
-                id: i,
-                url: `https://anime-sama.fr/s2/scans/${state?.data.scanPath}/${selectedChap}/${i}.jpg`,
-            });
+        if (state?.data && state?.data.scanPath) {
+            for (let i = 1; i <= newChapData?.[selectedChap!]; i++) {
+                pages.push({
+                    id: i,
+                    url: `https://anime-sama.fr/s2/scans/${state.data.scanPath}/${selectedChap}/${i}.jpg`,
+                });
+            }
         }
 
         const firstImage = new Image();

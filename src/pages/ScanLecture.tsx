@@ -137,7 +137,6 @@ function ScanLecture() {
             const progress = (scrollTop / scrollHeight) * 100;
 
             if ((scrollTop + clientHeight >= scrollHeight) && !loading && !scanLoading) {
-                console.log(scanLoading)
                 setScrollProgress(100);
                 return;
             }
@@ -209,7 +208,7 @@ function ScanLecture() {
                         replace
                         className="underline text-sm mt-3 text-red-600 "
                     >
-                        Back To {capitalize(state?.data.title)}
+                        Back To {capitalize(state?.data?.title ?? "Scan")}
                     </Link>
                 </div>
             </Page>

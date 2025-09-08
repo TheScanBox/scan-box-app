@@ -119,7 +119,7 @@ function CardsContainer({
                 onMouseMove={onMouseMove}
             >
                 {!!data?.length &&
-                    data?.map((scan: any) => (
+                    data?.map((scan: ScanResponse | FavoriteScan | BookmarkScan) => (
                         <Card
                             key={scan?.id}
                             {...scan}

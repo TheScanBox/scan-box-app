@@ -75,7 +75,7 @@ export function Page({
 
             if (location.search.includes("?source=auth")) {
                 if (location.pathname.includes("read") && location.state?.data) {
-                    const { scanId, scanParentId } = location.state?.data;
+                    const { scanId, scanParentId } = location.state.data;
 
                     const path = scanParentId
                         ? `../details/${scanId}/${scanParentId}?source=auth`
