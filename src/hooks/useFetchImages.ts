@@ -130,7 +130,7 @@ const useFetchImages = ({
             for (let i = 1; i <= newChapData?.[selectedChap!]; i++) {
                 pages.push({
                     id: i,
-                    url: `https://anime-sama.fr/s2/scans/${state.data.scanPath}/${selectedChap}/${i}.jpg`,
+                    url: `${import.meta.env.VITE_ANIME_SAMA_DOMAIN}/s2/scans/${state.data.scanPath}/${selectedChap}/${i}.jpg`,
                 });
             }
         }
